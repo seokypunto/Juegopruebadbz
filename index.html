@@ -31,13 +31,13 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      padding: 10px 16px 70px 16px;
+      padding: 6px 14px 60px 14px;
       box-sizing: border-box;
       overflow-y: auto;
     }
 
     .titulo {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: #888;
       margin-bottom: 2px;
       text-transform: uppercase;
@@ -65,15 +65,25 @@
       transform: scale(0.95);
     }
 
-    /* IMÁGENES ADAPTABLES PARA QUE NO SE CHAFEN */
+    /* IMAGEN DE MINA (VEGETA) */
     .icono-mina-img {
-      width: 170px;
-      height: 170px;
-      max-height: 38vh;
+      width: 180px;
+      height: 180px;
+      max-height: 36vh;
       object-fit: contain;
       margin-bottom: 6px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
+    }
+
+    /* CÁPSULA GIGANTE Y ADAPTABLE */
+    .capsula-img {
+      width: 280px;
+      max-width: 82vw;
+      height: auto;
+      object-fit: contain;
+      margin: 4px 0;
+      filter: drop-shadow(0 0 15px rgba(0, 180, 255, 0.25));
     }
 
     .texto-estado {
@@ -90,7 +100,7 @@
       background: #222;
       border-radius: 8px;
       height: 12px;
-      margin-top: 12px;
+      margin-top: 10px;
       overflow: hidden;
       border: 1px solid #444;
     }
@@ -103,7 +113,7 @@
     #textoProgreso {
       font-size: 0.8rem;
       color: #aaa;
-      margin-top: 6px;
+      margin-top: 5px;
     }
 
     .capsula-container {
@@ -112,26 +122,31 @@
       align-items: center;
       text-align: center;
       width: 100%;
-      max-width: 320px;
+      max-width: 340px;
     }
+
+    /* CONTADOR GIGANTE */
     .contador-capsula {
-      font-size: 1.8rem;
-      font-weight: bold;
+      font-size: 2.3rem;
+      font-weight: 800;
       color: #00ffcc;
-      margin: 6px 0;
+      margin: 2px 0 8px 0;
       font-family: monospace;
+      text-shadow: 0 2px 10px rgba(0, 255, 204, 0.3);
+      letter-spacing: 1px;
     }
+
     .btn-accion {
       background: linear-gradient(135deg, #00b4db, #0083b0);
       color: white;
       border: none;
       border-radius: 10px;
-      padding: 9px 14px;
+      padding: 10px 14px;
       font-size: 0.85rem;
       font-weight: bold;
       cursor: pointer;
       width: 100%;
-      margin-top: 6px;
+      margin-top: 5px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.1s;
     }
@@ -144,7 +159,7 @@
     }
 
     #ton-connect-button {
-      margin-top: 6px;
+      margin-top: 5px;
       display: flex;
       justify-content: center;
       width: 100%;
@@ -163,7 +178,7 @@
       overflow-y: auto;
       text-align: left;
       width: 100%;
-      margin: 10px 0;
+      margin: 8px 0;
       font-size: 0.85rem;
       background: #181818;
       padding: 10px;
@@ -186,7 +201,7 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 55px;
+      height: 52px;
       background: #161616;
       border-top: 1px solid #282828;
       display: flex;
@@ -277,9 +292,9 @@
     <div id="pantallaCapsula" class="capsula-container">
       <div class="titulo">Cápsula de Nacimiento</div>
       
-      <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="icono-mina-img" alt="Cápsula">
+      <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="capsula-img" alt="Cápsula">
       
-      <div style="font-size: 0.8rem; color: #bbb;">Tiempo restante para eclosionar:</div>
+      <div style="font-size: 0.75rem; color: #aaa; margin-top: 2px;">Tiempo restante para eclosionar:</div>
       <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
       <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
@@ -306,7 +321,7 @@
 
     <!-- PANTALLA 3: SECCIÓN AMIGOS -->
     <div id="pantallaAmigos" class="amigos-container oculto">
-      <div class="titulo" style="margin-bottom: 6px;">Tus Amigos Invitados</div>
+      <div class="titulo" style="margin-bottom: 4px;">Tus Amigos Invitados</div>
       <p style="font-size: 0.75rem; color: #aaa; margin-top: 0;">Gana bonificaciones invitando a tus compis de Telegram.</p>
       
       <div id="contenedorListaAmigos" class="lista-amigos">
