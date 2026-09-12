@@ -19,13 +19,13 @@
       margin: 0;
       user-select: none;
     }
-    .contador {
-      font-size: 3rem;
+    #monedas {
+      font-size: 3.5rem;
       font-weight: bold;
       margin-bottom: 20px;
       color: #ffd700;
     }
-    button {
+    .btn-tap {
       background-color: #e53935;
       color: white;
       border: none;
@@ -36,9 +36,9 @@
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 8px 0 #b71c1c;
-      transition: transform 0.1s, box-shadow 0.1s;
+      outline: none;
     }
-    button:active {
+    .btn-tap:active {
       transform: translateY(4px);
       box-shadow: 0 4px 0 #b71c1c;
     }
@@ -52,7 +52,7 @@
       font-size: 0.75rem;
       padding: 10px;
       border-radius: 8px;
-      height: 110px;
+      height: 120px;
       overflow-y: auto;
       border: 1px solid #333;
       text-align: left;
@@ -61,8 +61,8 @@
 </head>
 <body>
 
-  <div class="contador" id="monedas">0</div>
-  <button id="tapBtn">TAP!</button>
+  <div id="monedas">0</div>
+  <button id="tapBtn" class="btn-tap" onclick="hacerTap()">TAP!</button>
 
   <div id="log">=== DEBUG CONSOLE ===</div>
 
@@ -78,6 +78,7 @@
       return false;
     };
 
+    // Inicializar Telegram
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.expand();
@@ -93,37 +94,37 @@
       logger('User: NO detectado en initDataUnsafe');
     }
 
-    const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co'; // Inserta tu URL real si es diferente
-    const SUPABASE_KEY = 'TU_KEY_PUBLICA';                   // Inserta tu Key real si es diferente
+    // Configuración Supabase
+    const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co'; 
+    const SUPABASE_KEY = 'TU_KEY_PUBLICA';                   
 
     let supabase;
     try {
       if (window.supabase) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        logger('Supabase: Cliente creado');
+        logger('Supabase: Conectado');
       } else {
         logger('Supabase: CDN no cargado');
       }
     } catch(e) {
-      logger('Supabase Init Error: ' + e.message);
+      logger('Supabase Error: ' + e.message);
     }
 
     let contador = 0;
-    const btn = document.getElementById('tapBtn');
-    const displayMonedas = document.getElementById('monedas');
 
-    btn.addEventListener('click', async () => {
+    // Función directa ejecutada desde el botón (onclick)
+    async function hacerTap() {
       contador++;
-      displayMonedas.innerText = contador;
-      logger('Tap! Total local: ' + contador);
+      document.getElementById('monedas').innerText = contador;
+      logger('¡Tap registrado! Contador: ' + contador);
 
       if (!usuario) {
-        logger('Aviso: No se envía (Falta usuario Telegram)');
+        logger('Error: Falta usuario Telegram para guardar');
         return;
       }
 
       if (!supabase) {
-        logger('Aviso: No se envía (Falta cliente Supabase)');
+        logger('Error: Cliente Supabase no inicializado');
         return;
       }
 
@@ -139,12 +140,12 @@
         if (error) {
           logger('Error Supabase: ' + error.message);
         } else {
-          logger('¡Guardado OK en Supabase!');
+          logger('¡Guardado con éxito en Supabase!');
         }
       } catch (err) {
         logger('Excepción: ' + err.message);
       }
-    });
+    }
   </script>
 </body>
 </html>
