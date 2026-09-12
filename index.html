@@ -24,6 +24,26 @@
       overflow: hidden;
     }
 
+    /* BOTÓN DEMO DE PRUEBA (SOLO PARA TI) */
+    .btn-demo-test {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 0, 85, 0.85);
+      color: white;
+      border: 1px solid #ff4081;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .btn-demo-test:active {
+      transform: scale(0.95);
+    }
+
     .contenido-principal {
       flex: 1;
       display: flex;
@@ -301,6 +321,9 @@
 </head>
 <body>
 
+  <!-- BOTÓN DEMO DE PRUEBA RÁPIDA -->
+  <button class="btn-demo-test" onclick="forzarAperturaDemo()">⚡ TEST ABRIR</button>
+
   <div class="contenido-principal">
     <!-- PANTALLA 1: LA CÁPSULA -->
     <div id="pantallaCapsula" class="capsula-container">
@@ -534,6 +557,14 @@
       } catch (e) {
         alert("Transacción cancelada o error en la red TON.");
       }
+    }
+
+    // FUNCIÓN DEL BOTÓN DEMO DE PRUEBA
+    function forzarAperturaDemo() {
+      tiempoRestanteSegundos = 0;
+      timestampFin = Date.now();
+      eclosionarCapsula();
+      actualizarSupabaseCapsula();
     }
 
     function cambiarSeccion(seccion) {
