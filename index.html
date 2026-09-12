@@ -6,7 +6,6 @@
   <title>Criptomaniakos Miner</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- SDK de TON Connect UI para conectar la Wallet -->
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
     body {
@@ -31,21 +30,21 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      padding-bottom: 70px;
+      padding-bottom: 60px;
       overflow-y: auto;
     }
 
     .titulo {
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: #888;
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 2px;
     }
     #monedas {
-      font-size: 3.5rem;
+      font-size: 3rem;
       font-weight: bold;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       color: #ffd700;
     }
     
@@ -64,16 +63,16 @@
     }
 
     .icono-mina-img {
-      width: 280px;
-      height: 280px;
+      width: 240px;
+      height: 240px;
       object-fit: contain;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
 
     .texto-estado {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: bold;
       color: #00ffcc;
       text-transform: uppercase;
@@ -81,12 +80,12 @@
     }
 
     .barra-contenedor {
-      width: 80%;
-      max-width: 280px;
+      width: 75%;
+      max-width: 260px;
       background: #222;
-      border-radius: 10px;
-      height: 16px;
-      margin-top: 30px;
+      border-radius: 8px;
+      height: 14px;
+      margin-top: 20px;
       overflow: hidden;
       border: 1px solid #444;
     }
@@ -97,9 +96,9 @@
       transition: width 0.3s ease;
     }
     #textoProgreso {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #aaa;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .capsula-container {
@@ -111,23 +110,23 @@
       max-width: 320px;
     }
     .contador-capsula {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       font-weight: bold;
       color: #00ffcc;
-      margin: 15px 0;
+      margin: 10px 0;
       font-family: monospace;
     }
     .btn-accion {
       background: linear-gradient(135deg, #00b4db, #0083b0);
       color: white;
       border: none;
-      border-radius: 12px;
-      padding: 12px 20px;
-      font-size: 0.95rem;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
       font-weight: bold;
       cursor: pointer;
       width: 100%;
-      margin-top: 10px;
+      margin-top: 8px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.1s;
     }
@@ -139,15 +138,13 @@
       color: #121212;
     }
 
-    /* CONTENEDOR PARA EL BOTÓN DE TON CONNECT */
     #ton-connect-button {
-      margin-top: 10px;
+      margin-top: 8px;
       display: flex;
       justify-content: center;
       width: 100%;
     }
 
-    /* ESTILOS SECCIÓN AMIGOS */
     .amigos-container {
       display: flex;
       flex-direction: column;
@@ -157,36 +154,36 @@
       text-align: center;
     }
     .lista-amigos {
-      max-height: 220px;
+      max-height: 200px;
       overflow-y: auto;
       text-align: left;
       width: 100%;
-      margin: 15px 0;
-      font-size: 0.9rem;
+      margin: 12px 0;
+      font-size: 0.85rem;
       background: #181818;
-      padding: 12px;
-      border-radius: 10px;
+      padding: 10px;
+      border-radius: 8px;
       border: 1px solid #333;
       box-sizing: border-box;
     }
     .amigo-item {
-      padding: 8px 6px;
+      padding: 6px 4px;
       border-bottom: 1px solid #2a2a2a;
       color: #00ffcc;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
-    /* MENÚ INFERIOR FIJO */
+    /* MENÚ INFERIOR ESTILIZADO Y FINO */
     .menu-inferior {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 65px;
-      background: #181818;
-      border-top: 1px solid #2a2a2a;
+      height: 55px;
+      background: #161616;
+      border-top: 1px solid #282828;
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -196,7 +193,7 @@
       background: none;
       border: none;
       color: #777;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -204,11 +201,17 @@
       flex: 1;
       height: 100%;
       justify-content: center;
+      padding: 0;
+      margin: 0;
       transition: color 0.2s;
     }
-    .menu-item span {
-      font-size: 1.3rem;
-      margin-bottom: 2px;
+    .menu-item .menu-icono {
+      font-size: 1.1rem;
+      margin-bottom: 1px;
+      line-height: 1;
+    }
+    .menu-item span:last-child {
+      line-height: 1;
     }
     .menu-item.activo {
       color: #00ffcc;
@@ -227,40 +230,39 @@
     }
     .modal-contenido {
       background: #1e1e1e;
-      padding: 20px;
-      border-radius: 16px;
+      padding: 18px;
+      border-radius: 14px;
       width: 85%;
-      max-width: 280px;
+      max-width: 270px;
       text-align: center;
       border: 1px solid #444;
       box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     }
     .modal-contenido p {
       margin-top: 0;
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #ddd;
     }
     .btn-modal {
       background: #333;
       color: white;
       border: 1px solid #555;
-      padding: 10px;
+      padding: 9px;
       border-radius: 8px;
       width: 100%;
-      margin-top: 8px;
+      margin-top: 6px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
     .btn-modal:active { background: #444; }
     .btn-cerrar {
       background: #b71c1c;
       border: none;
-      margin-top: 15px;
+      margin-top: 12px;
     }
 
     .oculto { display: none !important; }
-    #log { display: none !important; }
   </style>
 </head>
 <body>
@@ -272,15 +274,12 @@
       
       <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="icono-mina-img" alt="Cápsula">
       
-      <div style="font-size: 0.9rem; color: #bbb;">Tiempo restante para eclosionar:</div>
+      <div style="font-size: 0.85rem; color: #bbb;">Tiempo restante para eclosionar:</div>
       <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
       <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
-      
-      <!-- BOTÓN DE ACELERAR CON WALLET TON -->
       <button class="btn-accion btn-pago" onclick="acelerarConTonWallet()">Acelerar con Inversión (TON)</button>
       
-      <!-- Widget nativo de conexión de TonConnect (opcional integrado) -->
       <div id="ton-connect-button"></div>
     </div>
 
@@ -302,8 +301,8 @@
 
     <!-- PANTALLA 3: SECCIÓN AMIGOS -->
     <div id="pantallaAmigos" class="amigos-container oculto">
-      <div class="titulo" style="margin-bottom: 10px;">Tus Amigos Invitados</div>
-      <p style="font-size: 0.85rem; color: #aaa; margin-top: 0;">Gana bonificaciones invitando a tus compis de Telegram.</p>
+      <div class="titulo" style="margin-bottom: 8px;">Tus Amigos Invitados</div>
+      <p style="font-size: 0.8rem; color: #aaa; margin-top: 0;">Gana bonificaciones invitando a tus compis de Telegram.</p>
       
       <div id="contenedorListaAmigos" class="lista-amigos">
         Cargando amigos...
@@ -313,14 +312,14 @@
     </div>
   </div>
 
-  <!-- MENÚ INFERIOR FIJO -->
+  <!-- MENÚ INFERIOR FIJO Y FINO -->
   <div class="menu-inferior">
     <button class="menu-item activo" id="navJuego" onclick="cambiarSeccion('juego')">
-      <span>⚡</span>
+      <span class="menu-icono">⚡</span>
       <span>Mina</span>
     </button>
     <button class="menu-item" id="navAmigos" onclick="cambiarSeccion('amigos')">
-      <span>👥</span>
+      <span class="menu-icono">👥</span>
       <span>Amigos</span>
     </button>
   </div>
@@ -335,10 +334,7 @@
     </div>
   </div>
 
-  <div id="log">=== CONSOLA ===</div>
-
   <script>
-    // Inicializar TON Connect UI
     const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
       manifestUrl: 'https://seokypunto.github.io/Juegopruebadbz/tonconnect-manifest.json',
       buttonRootId: 'ton-connect-button'
@@ -470,12 +466,9 @@
       } catch (e) {}
     }
 
-    /* FUNCIÓN DE PAGO Y ACELERACIÓN REAL CON TON */
     async function acelerarConTonWallet() {
-      // Comprobar si el usuario tiene la wallet conectada mediante TON Connect
       if (!tonConnectUI.connected) {
         try {
-          // Si no está conectada, abre el modal para que elija su wallet (Tonkeeper, etc.)
           await tonConnectUI.openModal();
           return;
         } catch (error) {
@@ -484,23 +477,18 @@
         }
       }
 
-      // Definimos la transacción de pago (ejemplo: 0.5 TON para acelerar la cápsula)
-      // Dirección de destino de ejemplo o tu wallet personal de recaudación
       const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 360, // 6 minutos de validez
+        validUntil: Math.floor(Date.now() / 1000) + 360,
         messages: [
           {
-            address: "UQD_TU_WALLET_DE_DESTINO_AQUI_O_CONTRATO", // Reemplaza por tu dirección TON
-            amount: "500000000" // En nanotons (0.5 TON = 500,000,000 nanotons)
+            address: "UQD_TU_WALLET_DE_DESTINO_AQUI_O_CONTRATO",
+            amount: "500000000"
           }
         ]
       };
 
       try {
-        alert("Abriendo tu Wallet para confirmar la inversión de aceleración...");
         const result = await tonConnectUI.sendTransaction(transaction);
-        
-        // Si el pago es exitoso, restamos 12 horas (o el tiempo que desees)
         timestampFin -= (12 * 3600 * 1000);
         var ahora = Date.now();
         var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
@@ -509,7 +497,6 @@
         iniciarContadorLocal(segundosRestantes);
         actualizarSupabaseCapsula();
         alert("¡Inversión exitosa! Tu cápsula ha acelerado su eclosión.");
-
       } catch (e) {
         alert("Transacción cancelada o error en la red TON.");
       }
