@@ -137,7 +137,8 @@
   <div id="pantallaCapsula" class="capsula-container">
     <div class="titulo">Cápsula de Nacimiento</div>
     
-    <img src="https://raw.githubusercontent.com/seokypunto/Juegopruebadbz/main/assets/img/vegeta-blue.png?raw=true" class="icono-mina-img" alt="Cápsula Vegeta">
+    <!-- Imagen de la cápsula recién integrada -->
+    <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="icono-mina-img" alt="Cápsula">
     
     <div style="font-size: 0.9rem; color: #bbb;">Tiempo restante para eclosionar:</div>
     <div id="relojCapsula" class="contador-capsula">48:00:00</div>
@@ -147,7 +148,7 @@
   </div>
 
 
-  <!-- ================= PANTALLA 2: EL MINERO (JUEGO PRINCIPAL) ================= -->
+  <!-- ================= PANTALLA 2: EL MINERO (JUEGO PRINCIPAL CON VEGETA BLUE) ================= -->
   <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
     <div class="titulo">Balance Total</div>
     <div id="monedas">0</div>
@@ -234,7 +235,6 @@
       });
     }
 
-    // Comprobar si el usuario actual entró mediante un enlace de referido al cargar la app
     async function verificarReferidoEntrante() {
       if (!usuario || !clientSupabase) return;
       
@@ -245,22 +245,19 @@
       if (referrerId == usuario.id) return; // Evitar auto-referidos
 
       try {
-        // Verificar si este usuario ya fue registrado como referido en la BD para no restar varias veces
         var resCheck = await clientSupabase
           .from('referidos')
           .select('*')
           .eq('referido_id', usuario.id)
           .maybeSingle();
 
-        if (resCheck.data) return; // Ya contó este referido
+        if (resCheck.data) return; 
 
-        // Registrar que este usuario fue invitado por referrerId
         await clientSupabase.from('referidos').insert({
           referrer_id: parseInt(referrerId),
           referido_id: usuario.id
         });
 
-        // Actualizar el tiempo del padrino (restarle 1 hora en la BD si estuviera guardado, o notificar)
         logger('¡Registrado con éxito mediante referido de: ' + referrerId);
       } catch(e) {
         logger('Error procesando referido: ' + e.message);
