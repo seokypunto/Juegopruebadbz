@@ -248,11 +248,7 @@
 
   <script>
     function logger(txt) {
-      var elem = document.getElementById('log');
-      if (elem) {
-        elem.innerHTML += '<br>> ' + txt;
-        elem.scrollTop = elem.scrollHeight;
-      }
+      // Consola desactivada en pantalla
     }
 
     var tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -276,7 +272,6 @@
 
     async function verificarYRegistrarUsuario() {
       if (!usuario || !clientSupabase) {
-        logger('Modo local (sin Telegram o Supabase)');
         iniciarContadorLocal(48 * 3600);
         return;
       }
@@ -303,7 +298,6 @@
           document.getElementById('monedas').innerText = monedasTotales;
 
           var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
-          logger('Datos cargados. Quedan ' + segundosRestantes + 's');
 
           if (segundosRestantes <= 0) {
             eclosionarCapsula();
@@ -338,16 +332,11 @@
                   referrer_id: referrerId,
                   referido_id: usuario.id
                 });
-                logger('Registrado con éxito bajo el padrino: ' + referrerId);
               }
-            } catch (errRef) {
-              logger('Aviso tabla referidos: ' + errRef.message);
-            }
+            } catch (errRef) {}
           }
-          logger('Nuevo usuario inicializado correctamente.');
         }
       } catch (e) {
-        logger('Error en inicialización: ' + e.message);
         iniciarContadorLocal(48 * 3600);
       }
     }
@@ -378,21 +367,13 @@
     async function actualizarSupabaseCapsula() {
       if (!usuario || !clientSupabase) return;
       try {
-        var res = await clientSupabase.from('jugadores').upsert({
+        await clientSupabase.from('jugadores').upsert({
           telegram_id: usuario.id,
           username: usuario.username || 'sin_nombre',
           monedas: monedasTotales,
           capsula_fin: timestampFin
         }, { onConflict: 'telegram_id' });
-
-        if (res.error) {
-          logger('Error BD al guardar: ' + res.error.message);
-        } else {
-          logger('Sincronizado con Supabase OK.');
-        }
-      } catch (e) {
-        logger('Excepción guardando: ' + e.message);
-      }
+      } catch (e) {}
     }
 
     function abrirOpcionesReferido() {
@@ -418,14 +399,13 @@
       contenedor.innerHTML = "Cargando amigos...";
 
       try {
-        // Consultamos la tabla 'referidos' donde el referrer_id sea el usuario actual
         var resRef = await clientSupabase
           .from('referidos')
           .select('referido_id')
           .eq('referrer_id', usuario.id);
 
         if (resRef.error) {
-          contenedor.innerHTML = "Error al cargar amigos.";
+          contenedor.innerHTML = "Error al consultar referidos.";
           return;
         }
 
@@ -435,10 +415,8 @@
           return;
         }
 
-        // Obtenemos los IDs de los referidos
         var idsReferidos = referidos.map(function(r) { return r.referido_id; });
 
-        // Buscamos los nombres de usuario en la tabla 'jugadores'
         var resJugadores = await clientSupabase
           .from('jugadores')
           .select('username, telegram_id')
@@ -458,7 +436,7 @@
         contenedor.innerHTML = htmlLista;
 
       } catch (e) {
-        contenedor.innerHTML = "Error de conexión.";
+        contenedor.innerHTML = "Error de conexión con la base de datos.";
       }
     }
 
@@ -515,14 +493,12 @@
       
       iniciarContadorLocal(segundosRestantes);
       actualizarSupabaseCapsula();
-      logger('Aceleración aplicada (-12h).');
     }
 
     function eclosionarCapsula() {
       if (timerCapsula) clearInterval(timerCapsula);
       document.getElementById('pantallaCapsula').classList.add('oculto');
       document.getElementById('pantallaMinero').classList.remove('oculto');
-      logger('Cápsula eclosionada.');
     }
 
     var monedasTotales = 0;
@@ -560,7 +536,6 @@
       actualizarInterfazMinado();
 
       actualizarSupabaseCapsula();
-      logger('Monedas recolectadas. Total: ' + monedasTotales);
     }
   </script>
 </body>
