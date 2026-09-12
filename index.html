@@ -192,7 +192,7 @@
     <div class="titulo">Balance Total</div>
     <div id="monedas">0</div>
 
-    <button class="btn-mina" id="btnMina" onclick="recolectar()">
+    <button class="btn-mina" id="btnMina" onclick="recolectار()">
       <img src="https://raw.githubusercontent.com/seokypunto/Juegopruebadbz/main/assets/img/vegeta-blue.png?raw=true" class="icono-mina-img" alt="Vegeta Blue">
       <div class="texto-estado" id="estadoTexto">Minando...</div>
     </button>
@@ -262,7 +262,7 @@
 
     var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
 
-    // --- SISTEMA DE REFERIDOS CORREGIDO ---
+    // --- SISTEMA DE REFERIDOS ROBUSTO ---
     function abrirOpcionesReferido() {
       if (!usuario) {
         logger('No se pudo obtener el usuario de Telegram.');
@@ -278,8 +278,9 @@
 
     function obtenerEnlaceRef() {
       if (!usuario) return "";
-      // Enlace corregido utilizando el bot correcto vinculado a tu ecosistema
-      return "https://t.me/seokypunto_bot?start=ref_" + usuario.id;
+      // Usamos el enlace web oficial de la Mini App o el esquema directo compatible con Telegram
+      var botName = "seokypunto_bot"; // Bot exacto configurado
+      return "https://t.me/" + botName + "?start=ref_" + usuario.id;
     }
 
     function copiarEnlaceDirecto() {
@@ -304,7 +305,8 @@
         tg.openTelegramLink(enlaceShare);
         cerrarModalReferido();
       } else {
-        alert("La función de compartir en Telegram solo está disponible dentro de la app.");
+        window.open("https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent("¡Únete a mi cápsula en Criptomaniakos Miner!"), '_blank');
+        cerrarModalReferido();
       }
     }
 
