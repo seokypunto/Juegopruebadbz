@@ -10,7 +10,7 @@
     body {
       background-color: #121212;
       color: #ffffff;
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -36,7 +36,6 @@
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 8px 0 #b71c1c;
-      outline: none;
     }
     .btn-tap:active {
       transform: translateY(4px);
@@ -62,89 +61,83 @@
 <body>
 
   <div id="monedas">0</div>
-  <button id="tapBtn" class="btn-tap" onclick="hacerTap()">TAP!</button>
+  <button class="btn-tap" onclick="hacerTap()">TAP!</button>
 
-  <div id="log">=== DEBUG CONSOLE ===</div>
+  <div id="log">=== CONSOLA ===</div>
 
   <script>
-    function logger(mensaje) {
-      const logDiv = document.getElementById('log');
-      logDiv.innerHTML += '<br>> ' + mensaje;
-      logDiv.scrollTop = logDiv.scrollHeight;
+    function logger(txt) {
+      var elem = document.getElementById('log');
+      if (elem) {
+        elem.innerHTML += '<br>> ' + txt;
+        elem.scrollTop = elem.scrollHeight;
+      }
     }
 
-    window.onerror = function(msg, url, line) {
-      logger('ERROR SCRIPT: ' + msg + ' (Línea ' + line + ')');
+    // Capture global script errors
+    window.onerror = function(msg, line) {
+      logger('ERROR SCRIPT: ' + msg);
       return false;
     };
 
-    // Inicializar Telegram SDK
-    const tg = window.Telegram?.WebApp;
+    logger('Script cargado correctamente.');
+
+    var tg = window.Telegram ? window.Telegram.WebApp : null;
     if (tg) {
       tg.expand();
-      logger('Telegram SDK: OK');
-    } else {
-      logger('Telegram SDK: NO Detectado');
+      logger('Telegram SDK activo');
     }
 
-    const usuario = tg?.initDataUnsafe?.user;
+    var usuario = (tg && tg.initDataUnsafe) ? tg.initDataUnsafe.user : null;
     if (usuario) {
-      logger('User: ' + (usuario.username || usuario.first_name) + ' (' + usuario.id + ')');
+      logger('Usuario: ' + usuario.id);
     } else {
-      logger('User: NO detectado en initDataUnsafe');
+      logger('Sin datos de usuario Telegram');
     }
 
-    // AVISO: Recuerda reemplazar estas dos variables con tus datos reales de Supabase:
-    const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co'; 
-    const SUPABASE_KEY = 'TU_KEY_PUBLICA';                   
+    // REEMPLAZA ESTAS DOS LINEAS CON TUS DATOS DE SUPABASE:
+    var SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';
+    var SUPABASE_KEY = 'TU_KEY_PUBLICA';
 
-    let supabase;
+    var clientSupabase = null;
     try {
       if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        logger('Supabase: Conectado');
-      } else {
-        logger('Supabase: CDN no cargado');
+        clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        logger('Supabase listo');
       }
     } catch(e) {
-      logger('Supabase Error: ' + e.message);
+      logger('Error Supabase: ' + e.message);
     }
 
-    let contador = 0;
+    var contador = 0;
 
-    // Función que ejecuta el botón TAP
-    async function hacerTap() {
-      contador++;
+    function hacerTap() {
+      contador = contador + 1;
       document.getElementById('monedas').innerText = contador;
-      logger('¡Tap registrado! Contador: ' + contador);
+      logger('Tap pulsado! Valor: ' + contador);
 
-      if (!usuario) {
-        logger('Aviso: No guarda en BD (falta ID de Telegram)');
+      if (!usuario || !clientSupabase) {
+        logger('No se envia a BD (falta usuario o cliente)');
         return;
       }
 
-      if (!supabase) {
-        logger('Aviso: No guarda en BD (falta cliente Supabase)');
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('jugadores')
-          .upsert({ 
-            telegram_id: usuario.id, 
-            username: usuario.username || 'sin_nombre', 
-            monedas: contador 
-          });
-
-        if (error) {
-          logger('Error Supabase: ' + error.message);
-        } else {
-          logger('¡Guardado con éxito en Supabase!');
-        }
-      } catch (err) {
-        logger('Excepción: ' + err.message);
-      }
+      clientSupabase
+        .from('jugadores')
+        .upsert({ 
+          telegram_id: usuario.id, 
+          username: usuario.username || 'sin_nombre', 
+          monedas: contador 
+        })
+        .then(function(res) {
+          if (res.error) {
+            logger('Error BD: ' + res.error.message);
+          } else {
+            logger('¡GUARDADO EN BD!');
+          }
+        })
+        .catch(function(err) {
+          logger('Excepcion BD: ' + err.message);
+        });
     }
   </script>
 </body>
