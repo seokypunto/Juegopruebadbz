@@ -1,846 +1,180 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Criptomaniakos Miner</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-  <style>
-    body {
-      background-color: #121212;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      height: 100vh;
-      height: 100dvh;
-      margin: 0;
-      user-select: none;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* BOTÓN DEMO DE PRUEBA (SOLO PARA TI) */
-    .btn-demo-test {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255, 0, 85, 0.85);
-      color: white;
-      border: 1px solid #ff4081;
-      border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 0.65rem;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 9999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    }
-    .btn-demo-test:active {
-      transform: scale(0.95);
-    }
-
-    .contenido-principal {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      padding: 4px 14px 52px 14px;
-      box-sizing: border-box;
-      overflow-y: auto;
-    }
-
-    .titulo {
-      font-size: 0.7rem;
-      color: #888;
-      margin-bottom: 1px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-    }
-    
-    #monedas {
-      font-size: 1.8rem;
-      font-weight: bold;
-      margin-bottom: 4px;
-      color: #ffd700;
-    }
-
-    /* DATOS DE NIVEL (ARRIBA, ENCIMA DE GOKU) */
-    .nivel-info-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 80%;
-      max-width: 240px;
-      margin-bottom: 6px;
-    }
-    .nivel-texto-fila {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      font-size: 0.75rem;
-      font-weight: bold;
-      color: #ff9800;
-      margin-bottom: 2px;
-      text-transform: uppercase;
-    }
-    .barra-exp-contenedor {
-      width: 100%;
-      background: #222;
-      border-radius: 6px;
-      height: 6px;
-      overflow: hidden;
-      border: 1px solid #444;
-    }
-    #barraExp {
-      background: linear-gradient(90deg, #ff9800, #ffeb3b);
-      height: 100%;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    
-    .btn-mina {
-      background: none;
-      border: none;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
-    .btn-mina:active {
-      transform: scale(0.95);
-    }
-
-    /* ANIMACIÓN DE FLOTACIÓN SUAVE PARA GOKU BABY */
-    @keyframes flotarGoku {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-4px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
-
-    /* IMAGEN DE GOKU BABY GIGANTE (DOBLE DE TAMAÑO) */
-    .icono-mina-img {
-      width: 380px;
-      max-width: 90vw;
-      height: auto;
-      max-height: 42vh;
-      object-fit: contain;
-      margin-bottom: 2px;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      filter: drop-shadow(0 0 20px rgba(0, 255, 204, 0.3));
-      animation: flotarGoku 4s ease-in-out infinite;
-    }
-
-    /* ANIMACIÓN DE FLOTACIÓN PARA LA CÁPSULA */
-    @keyframes flotar {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
-
-    /* CÁPSULA GIGANTE */
-    .capsula-img {
-      width: 280px;
-      max-width: 82vw;
-      height: auto;
-      object-fit: contain;
-      margin: 4px 0;
-      filter: drop-shadow(0 0 15px rgba(0, 180, 255, 0.25));
-      animation: flotar 3s ease-in-out infinite;
-    }
-
-    .texto-estado {
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #00ffcc;
-      text-transform: uppercase;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-      margin-top: 2px;
-    }
-
-    .barra-contenedor {
-      width: 80%;
-      max-width: 240px;
-      background: #222;
-      border-radius: 8px;
-      height: 8px;
-      margin-top: 4px;
-      overflow: hidden;
-      border: 1px solid #444;
-    }
-    #barraProgreso {
-      background: linear-gradient(90deg, #00b4db, #00ffcc);
-      height: 100%;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    #textoProgreso {
-      font-size: 0.7rem;
-      color: #aaa;
-      margin-top: 2px;
-    }
-
-    .capsula-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      width: 100%;
-      max-width: 340px;
-    }
-
-    .contador-capsula {
-      font-size: 2.3rem;
-      font-weight: 800;
-      color: #00ffcc;
-      margin: 2px 0 8px 0;
-      font-family: monospace;
-      text-shadow: 0 2px 10px rgba(0, 255, 204, 0.3);
-      letter-spacing: 1px;
-    }
-
-    .btn-accion {
-      background: linear-gradient(135deg, #00b4db, #0083b0);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 5px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.1s;
-    }
-    .btn-accion:active {
-      transform: scale(0.97);
-    }
-    .btn-pago {
-      background: linear-gradient(135deg, #f7971e, #ffd200);
-      color: #121212;
-    }
-
-    #ton-connect-button {
-      margin-top: 5px;
-      display: flex;
-      justify-content: center;
-      width: 100%;
-    }
-
-    .amigos-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      max-width: 340px;
-      text-align: center;
-    }
-    .lista-amigos {
-      max-height: 180px;
-      overflow-y: auto;
-      text-align: left;
-      width: 100%;
-      margin: 8px 0;
-      font-size: 0.85rem;
-      background: #181818;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      box-sizing: border-box;
-    }
-    .amigo-item {
-      padding: 5px 4px;
-      border-bottom: 1px solid #2a2a2a;
-      color: #00ffcc;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* MENÚ INFERIOR FIJO Y FINO */
-    .menu-inferior {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 52px;
-      background: #161616;
-      border-top: 1px solid #282828;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 100;
-    }
-    .menu-item {
-      background: none;
-      border: none;
-      color: #777;
-      font-size: 0.7rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      flex: 1;
-      height: 100%;
-      justify-content: center;
-      padding: 0;
-      margin: 0;
-      transition: color 0.2s;
-    }
-    .menu-item .menu-icono {
-      font-size: 1.1rem;
-      margin-bottom: 1px;
-      line-height: 1;
-    }
-    .menu-item span:last-child {
-      line-height: 1;
-    }
-    .menu-item.activo {
-      color: #00ffcc;
-      font-weight: bold;
-    }
-
-    /* MODAL DE REFERIDO */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    .modal-contenido {
-      background: #1e1e1e;
-      padding: 18px;
-      border-radius: 14px;
-      width: 85%;
-      max-width: 270px;
-      text-align: center;
-      border: 1px solid #444;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-    }
-    .modal-contenido p {
-      margin-top: 0;
-      font-size: 0.95rem;
-      color: #ddd;
-    }
-    .btn-modal {
-      background: #333;
-      color: white;
-      border: 1px solid #555;
-      padding: 9px;
-      border-radius: 8px;
-      width: 100%;
-      margin-top: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 0.85rem;
-    }
-    .btn-modal:active { background: #444; }
-    .btn-cerrar {
-      background: #b71c1c;
-      border: none;
-      margin-top: 12px;
-    }
-
-    .oculto { display: none !important; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego - Goku Baby</title>
+    <!-- Librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .stats {
+            margin: 15px 0;
+            font-size: 1.2rem;
+        }
+        /* Barra de nivel */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #444;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 25px;
+            margin: 15px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #ff9900;
+            transition: width 0.3s ease;
+        }
+        button {
+            background-color: #ff9900;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #e68a00;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- BOTÓN DEMO DE PRUEBA RÁPIDA -->
-  <button class="btn-demo-test" onclick="forzarAperturaDemo()">⚡ TEST ABRIR</button>
-
-  <div class="contenido-principal">
-    <!-- PANTALLA 1: LA CÁPSULA -->
-    <div id="pantallaCapsula" class="capsula-container">
-      <div class="titulo">Cápsula de Nacimiento</div>
-      
-      <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="capsula-img" alt="Cápsula">
-      
-      <div style="font-size: 0.75rem; color: #aaa; margin-top: 2px;">Tiempo restante para eclosionar:</div>
-      <div id="relojCapsula" class="contador-capsula">48:00:00</div>
-
-      <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
-      <button class="btn-accion btn-pago" onclick="acelerarConTonWallet()">Acelerar con Inversión (TON)</button>
-      
-      <div id="ton-connect-button"></div>
-    </div>
-
-    <!-- PANTALLA 2: EL MINERO -->
-    <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-      <div class="titulo">Balance Total</div>
-      <div id="monedas">0</div>
-
-      <!-- BARRA DE NIVEL (COLOCADA ARRIBA, ENCIMA DE LA CABEZA DE GOKU) -->
-      <div class="nivel-info-container">
-        <div class="nivel-texto-fila">
-          <span id="textoNivel">Nivel 1</span>
-          <span id="textoExpPorc">0%</span>
+    <div class="container">
+        <h1>Entrenamiento de Goku Baby</h1>
+        
+        <div class="stats">
+            <p>Nivel: <span id="goku-level">1</span></p>
+            <p>XP: <span id="goku-xp">0</span> / 100</p>
         </div>
-        <div class="barra-exp-contenedor">
-          <div id="barraExp"></div>
+
+        <!-- Barra de Nivel -->
+        <div class="progress-bar-container">
+            <div id="xp-bar" class="progress-bar"></div>
         </div>
-      </div>
 
-      <button class="btn-mina" id="btnMina" onclick="recolectar()">
-        <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/goku-baby.png?raw=true" class="icono-mina-img" alt="Goku Baby">
-        <div class="texto-estado" id="estadoTexto">Minando...</div>
-      </button>
+        <div class="stats">
+            <p>Balance actual: <span id="balance-val">100</span> monedas</p>
+        </div>
 
-      <!-- Barra de Progreso de Minado (Abajo) -->
-      <div class="barra-contenedor">
-        <div id="barraProgreso"></div>
-      </div>
-      <div id="textoProgreso">Progreso: 0 / 1000</div>
+        <button onclick="entrenar()">¡Entrenar / Ganar XP!</button>
+        <button onclick="guardarProgresoEnSupabase()">Guardar en la Nube</button>
     </div>
 
-    <!-- PANTALLA 3: SECCIÓN AMIGOS -->
-    <div id="pantallaAmigos" class="amigos-container oculto">
-      <div class="titulo" style="margin-bottom: 4px;">Tus Amigos Invitados</div>
-      <p style="font-size: 0.75rem; color: #aaa; margin-top: 0;">Gana bonificaciones invitando a tus compis de Telegram.</p>
-      
-      <div id="contenedorListaAmigos" class="lista-amigos">
-        Cargando amigos...
-      </div>
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN DE SUPABASE
+        // ==========================================
+        const SUPABASE_URL = 'TU_PROJECT_URL_DE_SUPABASE'; // Reemplaza con tu URL de Supabase
+        const SUPABASE_ANON_KEY = 'TU_ANON_KEY_DE_SUPABASE'; // Reemplaza con tu Key anónima
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      <button class="btn-accion" onclick="abrirOpcionesReferido()">Compartir Enlace</button>
-    </div>
-  </div>
+        // ID de usuario de prueba (puedes cambiarlo o adaptarlo al sistema de Telegram/Login)
+        const userId = "usuario_test_1"; 
 
-  <!-- MENÚ INFERIOR FIJO Y FINO -->
-  <div class="menu-inferior">
-    <button class="menu-item activo" id="navJuego" onclick="cambiarSeccion('juego')">
-      <span class="menu-icono">⚡</span>
-      <span>Mina</span>
-    </button>
-    <button class="menu-item" id="navAmigos" onclick="cambiarSeccion('amigos')">
-      <span class="menu-icono">👥</span>
-      <span>Amigos</span>
-    </button>
-  </div>
+        // Estado del juego
+        let gameState = {
+            level: 1,
+            xp: 0,
+            balance: 100
+        };
 
-  <!-- MODAL DE REFERIDOS -->
-  <div id="modalReferido" class="modal-overlay oculto">
-    <div class="modal-contenido">
-      <p>¿Cómo quieres compartir tu enlace?</p>
-      <button class="btn-modal" onclick="copiarEnlaceDirecto()">Copiar enlace</button>
-      <button class="btn-modal" onclick="compartirTelegramDirecto()">Enviar a chat</button>
-      <button class="btn-modal btn-cerrar" onclick="cerrarModalReferido()">Cancelar</button>
-    </div>
-  </div>
+        // Actualizar la interfaz visual del juego
+        function actualizarUI() {
+            document.getElementById('goku-level').innerText = gameState.level;
+            document.getElementById('goku-xp').innerText = gameState.xp;
+            document.getElementById('balance-val').innerText = gameState.balance;
+            
+            // Calcular porcentaje para la barra de nivel (meta de 100 XP por nivel)
+            let porcentaje = (gameState.xp / 100) * 100;
+            if (porcentaje > 100) porcentaje = 100;
+            document.getElementById('xp-bar').style.width = porcentaje + '%';
+        }
 
-  <script>
-    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-      manifestUrl: 'https://seokypunto.github.io/Juegopruebadbz/tonconnect-manifest.json',
-      buttonRootId: 'ton-connect-button'
-    });
+        // Acción de entrenar (sube XP y balance)
+        function entrenar() {
+            gameState.xp += 25;
+            gameState.balance += 10;
 
-    var tg = window.Telegram ? window.Telegram.WebApp : null;
-    if (tg) { tg.expand(); }
+            if (gameState.xp >= 100) {
+                gameState.level += 1;
+                gameState.xp = 0;
+                alert('¡¡Has subido de nivel a Goku Baby!! 🎉');
+            }
 
-    var usuario = (tg && tg.initDataUnsafe) ? tg.initDataUnsafe.user : null;
+            actualizarUI();
+        }
 
-    var SUPABASE_URL = "https://jqxyxznxrfijwvvlzwqn.supabase.co";
-    var SUPABASE_KEY = "sb_publishable_pN84HJ_JgrYxWRC4EDq_fA_ges02f51";
+        // ==========================================
+        // FUNCIONES DE SUPABASE (Guardar y Cargar)
+        // ==========================================
+        async function guardarProgresoEnSupabase() {
+            const { data, error } = await _supabase
+                .from('goku_progress')
+                .upsert({ 
+                    user_id: userId, 
+                    goku_level: gameState.level, 
+                    goku_xp: gameState.xp,
+                    balance: { monedas: gameState.balance }, // Guardado estructurado en JSONB
+                    updated_at: new Date()
+                }, { onConflict: 'user_id' });
 
-    var clientSupabase = null;
-    try {
-      if (window.supabase) {
-        clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      }
-    } catch(e) {}
+            if (error) {
+                console.error('Error al guardar en Supabase:', error);
+                alert('Hubo un error al guardar el progreso.');
+            } else {
+                console.log('¡Progreso guardado con éxito!', data);
+                alert('¡Progreso guardado en Supabase correctamente!');
+            }
+        }
 
-    var tiempoRestanteSegundos = 48 * 3600; 
-    var timestampFin = 0;
-    var timerCapsula = null;
-    var capsulaAbierta = false;
-
-    // Variables de Juego / Progreso / Nivel
-    var monedasTotales = 0;
-    var progresoActual = 0;
-    var limiteMinado = 1000;
-    var nivelActual = 1;
-    var expActual = 0;
-    var expNecesaria = 5000;
-
-    async function verificarYRegistrarUsuario() {
-      if (!usuario || !clientSupabase) {
-        iniciarContadorLocal(48 * 3600);
-        return;
-      }
-
-      var ahora = Date.now();
-      var startParam = (tg && tg.initDataUnsafe) ? (tg.initDataUnsafe.start_param || tg.initDataUnsafe.startapp) : null;
-      var referrerId = null;
-
-      if (startParam && startParam.startsWith("ref_")) {
-        referrerId = parseInt(startParam.replace("ref_", ""));
-        if (referrerId === usuario.id) referrerId = null; 
-      }
-
-      try {
-        var res = await clientSupabase
-          .from('jugadores')
-          .select('*')
-          .eq('telegram_id', usuario.id)
-          .maybeSingle();
-
-        if (res.data && res.data.capsula_fin) {
-          timestampFin = parseInt(res.data.capsula_fin);
-          monedasTotales = res.data.monedas || 0;
-          nivelActual = res.data.nivel || 1;
-          expActual = res.data.exp || 0;
-
-          document.getElementById('monedas').innerText = monedasTotales;
-          actualizarInterfazNivel();
-
-          var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
-
-          if (segundosRestantes <= 0) {
-            eclosionarCapsula();
-            return;
-          } else {
-            iniciarContadorLocal(segundosRestantes);
-          }
-        } else {
-          timestampFin = ahora + (48 * 3600 * 1000);
-          monedasTotales = 0;
-          nivelActual = 1;
-          expActual = 0;
-
-          document.getElementById('monedas').innerText = 0;
-          actualizarInterfazNivel();
-
-          iniciarContadorLocal(48 * 3600);
-
-          await clientSupabase.from('jugadores').upsert({
-            telegram_id: usuario.id,
-            username: usuario.username || 'sin_nombre',
-            monedas: 0,
-            nivel: 1,
-            exp: 0,
-            capsula_fin: timestampFin
-          }, { onConflict: 'telegram_id' });
-
-          if (referrerId) {
-            try {
-              var resCheckRef = await clientSupabase
-                .from('referidos')
+        async function cargarProgresoDeSupabase() {
+            const { data, error } = await _supabase
+                .from('goku_progress')
                 .select('*')
-                .eq('referido_id', usuario.id)
-                .maybeSingle();
+                .eq('user_id', userId)
+                .single();
 
-              if (!resCheckRef.data) {
-                await clientSupabase.from('referidos').insert({
-                  referrer_id: referrerId,
-                  referido_id: usuario.id
-                });
-              }
-            } catch (errRef) {}
-          }
-        }
-      } catch (e) {
-        iniciarContadorLocal(48 * 3600);
-      }
-    }
+            if (error || !data) {
+                console.log('No hay datos previos en la base de datos, usando valores por defecto.');
+                return;
+            }
 
-    function iniciarContadorLocal(segundosIniciales) {
-      tiempoRestanteSegundos = segundosIniciales;
-      if (timerCapsula) clearInterval(timerCapsula);
+            // Volcar los datos recuperados al estado del juego
+            gameState.level = data.goku_level || 1;
+            gameState.xp = data.goku_xp || 0;
+            if (data.balance && data.balance.monedas) {
+                gameState.balance = data.balance.monedas;
+            }
 
-      timerCapsula = setInterval(function() {
-        if (tiempoRestanteSegundos <= 0) {
-          eclosionarCapsula();
-          return;
-        }
-        
-        var horas = Math.floor(tiempoRestanteSegundos / 3600);
-        var minutos = Math.floor((tiempoRestanteSegundos % 3600) / 60);
-        var segundos = tiempoRestanteSegundos % 60;
-
-        document.getElementById('relojCapsula').innerText = 
-          (horas < 10 ? "0" : "") + horas + ":" + 
-          (minutos < 10 ? "0" : "") + minutos + ":" + 
-          (segundos < 10 ? "0" : "") + segundos;
-        
-        tiempoRestanteSegundos--;
-      }, 1000);
-    }
-
-    async function actualizarSupabaseCapsula() {
-      if (!usuario || !clientSupabase) return;
-      try {
-        await clientSupabase.from('jugadores').upsert({
-          telegram_id: usuario.id,
-          username: usuario.username || 'sin_nombre',
-          monedas: monedasTotales,
-          nivel: nivelActual,
-          exp: expActual,
-          capsula_fin: timestampFin
-        }, { onConflict: 'telegram_id' });
-      } catch (e) {}
-    }
-
-    async function acelerarConTonWallet() {
-      if (!tonConnectUI.connected) {
-        try {
-          await tonConnectUI.openModal();
-          return;
-        } catch (error) {
-          alert("Debes conectar tu wallet TON para realizar la inversión.");
-          return;
-        }
-      }
-
-      const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 360,
-        messages: [
-          {
-            address: "UQCW6jcBFyTr5rM6hLIh30VQGNP9vKKHqMFYv1nqpz1fe2WX",
-            amount: "500000000"
-          }
-        ]
-      };
-
-      try {
-        const result = await tonConnectUI.sendTransaction(transaction);
-        timestampFin -= (12 * 3600 * 1000);
-        var ahora = Date.now();
-        var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
-        if (segundosRestantes < 0) segundosRestantes = 0;
-        
-        iniciarContadorLocal(segundosRestantes);
-        actualizarSupabaseCapsula();
-        alert("¡Inversión exitosa! Tu cápsula ha acelerado su eclosión.");
-      } catch (e) {
-        alert("Transacción cancelada o error en la red TON.");
-      }
-    }
-
-    // FUNCIÓN DEL BOTÓN DEMO DE PRUEBA
-    function forzarAperturaDemo() {
-      tiempoRestanteSegundos = 0;
-      timestampFin = Date.now();
-      eclosionarCapsula();
-      actualizarSupabaseCapsula();
-    }
-
-    function cambiarSeccion(seccion) {
-      document.getElementById('navJuego').classList.remove('activo');
-      document.getElementById('navAmigos').classList.remove('activo');
-
-      document.getElementById('pantallaAmigos').classList.add('oculto');
-      if (!capsulaAbierta) {
-        document.getElementById('pantallaCapsula').classList.add('oculto');
-      } else {
-        document.getElementById('pantallaMinero').classList.add('oculto');
-      }
-
-      if (seccion === 'juego') {
-        document.getElementById('navJuego').classList.add('activo');
-        if (!capsulaAbierta) {
-          document.getElementById('pantallaCapsula').classList.remove('oculto');
-        } else {
-          document.getElementById('pantallaMinero').classList.remove('oculto');
-        }
-      } else if (seccion === 'amigos') {
-        document.getElementById('navAmigos').classList.add('activo');
-        document.getElementById('pantallaAmigos').classList.remove('oculto');
-        cargarListaAmigos();
-      }
-    }
-
-    function abrirOpcionesReferido() {
-      if (!usuario) {
-        alert("Error: Debes abrir este juego desde Telegram.");
-        return;
-      }
-      document.getElementById('modalReferido').classList.remove('oculto');
-    }
-
-    function cerrarModalReferido() {
-      document.getElementById('modalReferido').classList.add('oculto');
-    }
-
-    async function cargarListaAmigos() {
-      var contenedor = document.getElementById('contenedorListaAmigos');
-      if (!usuario || !clientSupabase) {
-        contenedor.innerHTML = "Disponible solo en línea.";
-        return;
-      }
-
-      contenedor.innerHTML = "Cargando amigos...";
-
-      try {
-        var resRef = await clientSupabase
-          .from('referidos')
-          .select('referido_id')
-          .eq('referrer_id', usuario.id);
-
-        if (resRef.error) {
-          contenedor.innerHTML = "Error al consultar referidos.";
-          return;
+            actualizarUI();
+            console.log('¡Progreso de Goku cargado desde Supabase!', data);
         }
 
-        var referidos = resRef.data || [];
-        if (referidos.length === 0) {
-          contenedor.innerHTML = "Aún no has invitado a ningún amigo.";
-          return;
-        }
-
-        var idsReferidos = referidos.map(function(r) { return r.referido_id; });
-
-        var resJugadores = await clientSupabase
-          .from('jugadores')
-          .select('username, telegram_id')
-          .in('telegram_id', idsReferidos);
-
-        var listaJugadores = resJugadores.data || [];
-        if (listaJugadores.length === 0) {
-          contenedor.innerHTML = "No se encontraron detalles de los amigos.";
-          return;
-        }
-
-        var htmlLista = "";
-        for (var i = 0; i < listaJugadores.length; i++) {
-          var nombre = listaJugadores[i].username || ("Usuario " + listaJugadores[i].telegram_id);
-          htmlLista += '<div class="amigo-item">👤 ' + nombre + '</div>';
-        }
-        contenedor.innerHTML = htmlLista;
-
-      } catch (e) {
-        contenedor.innerHTML = "Error de conexión con la base de datos.";
-      }
-    }
-
-    function obtenerEnlaceRef() {
-      if (!usuario) return "";
-      var botName = "seoky_tapbot"; 
-      return "https://t.me/" + botName + "?startapp=ref_" + usuario.id;
-    }
-
-    function copiarEnlaceDirecto() {
-      var enlaceRef = obtenerEnlaceRef();
-      if (!enlaceRef) return;
-
-      navigator.clipboard.writeText(enlaceRef).then(function() {
-        alert("Enlace copiado con éxito.");
-        cerrarModalReferido();
-      }).catch(function(err) {
-        prompt("Copia tu enlace:", enlaceRef);
-        cerrarModalReferido();
-      });
-    }
-
-    function compartirTelegramDirecto() {
-      var enlaceRef = obtenerEnlaceRef();
-      if (!enlaceRef) return;
-
-      var textoMensaje = "¡Únete a mi cápsula en Criptomaniakos Miner!";
-      var enlaceShare = "https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent(textoMensaje);
-
-      cerrarModalReferido();
-
-      if (tg && typeof tg.openTelegramLink === 'function') {
-        tg.openTelegramLink(enlaceShare);
-      } else {
-        window.open(enlaceShare, '_blank');
-      }
-    }
-
-    if (clientSupabase) {
-      verificarYRegistrarUsuario();
-    } else {
-      iniciarContadorLocal(48 * 3600);
-    }
-
-    function eclosionarCapsula() {
-      capsulaAbierta = true;
-      if (timerCapsula) clearInterval(timerCapsula);
-      
-      var navActivo = document.getElementById('navJuego').classList.contains('activo');
-      if (navActivo) {
-        document.getElementById('pantallaCapsula').classList.add('oculto');
-        document.getElementById('pantallaMinero').classList.remove('oculto');
-      }
-    }
-
-    setInterval(function() {
-      var navActivo = document.getElementById('navJuego').classList.contains('activo');
-      if (capsulaAbierta && navActivo) {
-        if (progresoActual < limiteMinado) {
-          progresoActual++;
-          actualizarInterfazMinado();
-
-          if (progresoActual === limiteMinado) {
-            document.getElementById('estadoTexto').innerText = "RECLAMAR";
-            document.getElementById('estadoTexto').style.color = "#ffd700";
-          }
-        }
-      }
-    }, 1000);
-
-    function actualizarInterfazMinado() {
-      document.getElementById('barraProgreso').style.width = (progresoActual / limiteMinado) * 100 + '%';
-      document.getElementById('textoProgreso').innerText = 'Progreso: ' + progresoActual + ' / ' + limiteMinado;
-    }
-
-    function actualizarInterfazNivel() {
-      document.getElementById('textoNivel').innerText = 'Nivel ' + nivelActual;
-      var porcentajeExp = Math.floor((expActual / expNecesaria) * 100);
-      document.getElementById('textoExpPorc').innerText = porcentajeExp + '%';
-      document.getElementById('barraExp').style.width = porcentajeExp + '%';
-    }
-
-    function recolectar() {
-      if (progresoActual < limiteMinado) return;
-
-      // Sumar monedas y experiencia
-      monedasTotales += limiteMinado;
-      expActual += 500; // Cada recolección otorga 500 de EXP
-
-      // Comprobar si sube de nivel
-      if (expActual >= expNecesaria) {
-        expActual -= expNecesaria;
-        nivelActual++;
-        expNecesaria = Math.floor(expNecesaria * 1.3);
-        alert("¡Felicidades! Goku baby ha subido al Nivel " + nivelActual);
-      }
-
-      document.getElementById('monedas').innerText = monedasTotales;
-      actualizarInterfazNivel();
-
-      progresoActual = 0;
-      document.getElementById('estadoTexto').innerText = "Minando...";
-      document.getElementById('estadoTexto').style.color = "#00ffcc";
-      actualizarInterfazMinado();
-
-      actualizarSupabaseCapsula();
-    }
-  </script>
+        // Cargar los datos automáticamente al abrir la página
+        window.onload = function() {
+            cargarProgresoDeSupabase();
+        };
+    </script>
 </body>
 </html>
