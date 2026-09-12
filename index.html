@@ -33,7 +33,6 @@
       color: #ffd700;
     }
     
-    /* Botón transparente sin recuadro */
     .btn-mina {
       background: none;
       border: none;
@@ -48,7 +47,6 @@
       transform: scale(0.95);
     }
 
-    /* Personajes a lo grande (280px) y nítidos */
     .icono-mina-img {
       width: 280px;
       height: 280px;
@@ -66,7 +64,6 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* Barra de progreso de minado */
     .barra-contenedor {
       width: 80%;
       max-width: 280px;
@@ -89,7 +86,6 @@
       margin-top: 10px;
     }
 
-    /* Estilos de la pantalla de la Cápsula */
     .capsula-container {
       display: flex;
       flex-direction: column;
@@ -133,11 +129,10 @@
 </head>
 <body>
 
-  <!-- ================= PANTALLA 1: LA CÁPSULA (INCUBAZIÓN) ================= -->
+  <!-- ================= PANTALLA 1: LA CÁPSULA ================= -->
   <div id="pantallaCapsula" class="capsula-container">
     <div class="titulo">Cápsula de Nacimiento</div>
     
-    <!-- Imagen de la cápsula recién integrada -->
     <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="icono-mina-img" alt="Cápsula">
     
     <div style="font-size: 0.9rem; color: #bbb;">Tiempo restante para eclosionar:</div>
@@ -148,7 +143,7 @@
   </div>
 
 
-  <!-- ================= PANTALLA 2: EL MINERO (JUEGO PRINCIPAL CON VEGETA BLUE) ================= -->
+  <!-- ================= PANTALLA 2: EL MINERO ================= -->
   <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
     <div class="titulo">Balance Total</div>
     <div id="monedas">0</div>
@@ -190,7 +185,7 @@
       }
     } catch(e) {}
 
-    // --- LÓGICA DE LA CÁPSULA (48 Horas en segundos = 172800) ---
+    // --- LÓGICA DE LA CÁPSULA (48 Horas) ---
     var tiempoRestanteSegundos = 48 * 3600; 
 
     function actualizarRelojCapsula() {
@@ -213,26 +208,29 @@
 
     var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
 
-    // --- SISTEMA DE REFERIDOS ---
+    // --- SISTEMA DE REFERIDOS (MODIFICADO PARA TELEGRAM) ---
     function copiarEnlaceReferido() {
       if (!usuario) {
         logger('No se pudo obtener el usuario de Telegram.');
+        alert("Error: Debes abrir este juego desde Telegram para generar tu enlace.");
         return;
       }
 
-      var botUsername = "seoky_tanbot"; 
-      var enlaceRef = "https://t.me/" + botUsername + "?start=ref_" + usuario.id;
+      var enlaceRef = "https://t.me/seoky_tanbot?start=ref_" + usuario.id;
 
-      navigator.clipboard.writeText(enlaceRef).then(function() {
-        logger('Enlace de referido copiado: ' + enlaceRef);
-        if (tg && tg.showAlert) {
-          tg.showAlert("¡Enlace copiado! Compártelo. Cuando tu amigo entre al bot a través de él, se te restará 1 hora automáticamente.");
-        } else {
+      // Si está en Telegram, abre directamente la ventana nativa para compartir el enlace
+      if (tg && tg.openTelegramLink) {
+        var textoMensaje = "¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar!";
+        var enlaceShare = "https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent(textoMensaje);
+        tg.openTelegramLink(enlaceShare);
+      } else {
+        // Método alternativo si se abre fuera de Telegram
+        navigator.clipboard.writeText(enlaceRef).then(function() {
           alert("¡Enlace copiado al portapapeles!");
-        }
-      }).catch(function(err) {
-        logger('Error al copiar enlace: ' + err);
-      });
+        }).catch(function(err) {
+          alert("No se pudo copiar el enlace.");
+        });
+      }
     }
 
     async function verificarReferidoEntrante() {
@@ -283,7 +281,7 @@
     }
 
 
-    // --- LÓGICA DEL MINERO (Pantalla 2) ---
+    // --- LÓGICA DEL MINERO ---
     var monedasTotales = 0;
     var progresoActual = 0;
     var limiteMinado = 1000;
