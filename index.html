@@ -24,7 +24,6 @@
       overflow: hidden;
     }
 
-    /* BOTÓN DEMO DE PRUEBA (SOLO PARA TI) */
     .btn-demo-test {
       position: absolute;
       top: 10px;
@@ -71,7 +70,6 @@
       color: #ffd700;
     }
 
-    /* DATOS DE NIVEL (ARRIBA, ENCIMA DE GOKU) */
     .nivel-info-container {
       display: flex;
       flex-direction: column;
@@ -119,20 +117,12 @@
       transform: scale(0.95);
     }
 
-    /* ANIMACIÓN DE FLOTACIÓN SUAVE PARA GOKU BABY */
     @keyframes flotarGoku {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-4px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+      100% { transform: translateY(0px); }
     }
 
-    /* IMAGEN DE GOKU BABY GIGANTE (DOBLE DE TAMAÑO) */
     .icono-mina-img {
       width: 380px;
       max-width: 90vw;
@@ -146,20 +136,12 @@
       animation: flotarGoku 4s ease-in-out infinite;
     }
 
-    /* ANIMACIÓN DE FLOTACIÓN PARA LA CÁPSULA */
     @keyframes flotar {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
     }
 
-    /* CÁPSULA GIGANTE */
     .capsula-img {
       width: 280px;
       max-width: 82vw;
@@ -279,7 +261,6 @@
       gap: 6px;
     }
 
-    /* MENÚ INFERIOR FIJO Y FINO */
     .menu-inferior {
       position: absolute;
       bottom: 0;
@@ -322,7 +303,6 @@
       font-weight: bold;
     }
 
-    /* MODAL DE REFERIDO */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -371,31 +351,23 @@
 </head>
 <body>
 
-  <!-- BOTÓN DEMO DE PRUEBA RÁPIDA -->
   <button class="btn-demo-test" onclick="forzarAperturaDemo()">⚡ TEST ABRIR</button>
 
   <div class="contenido-principal">
-    <!-- PANTALLA 1: LA CÁPSULA -->
     <div id="pantallaCapsula" class="capsula-container">
       <div class="titulo">Cápsula de Nacimiento</div>
-      
       <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="capsula-img" alt="Cápsula">
-      
       <div style="font-size: 0.75rem; color: #aaa; margin-top: 2px;">Tiempo restante para eclosionar:</div>
       <div id="relojCapsula" class="contador-capsula">48:00:00</div>
-
       <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
       <button class="btn-accion btn-pago" onclick="acelerarConTonWallet()">Acelerar con Inversión (TON)</button>
-      
       <div id="ton-connect-button"></div>
     </div>
 
-    <!-- PANTALLA 2: EL MINERO -->
     <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
       <div class="titulo">Balance Total</div>
       <div id="monedas">0</div>
 
-      <!-- BARRA DE NIVEL (COLOCADA ARRIBA, ENCIMA DE LA CABEZA DE GOKU) -->
       <div class="nivel-info-container">
         <div class="nivel-texto-fila">
           <span id="textoNivel">Nivel 1</span>
@@ -411,27 +383,20 @@
         <div class="texto-estado" id="estadoTexto">Minando...</div>
       </button>
 
-      <!-- Barra de Progreso de Minado (Abajo) -->
       <div class="barra-contenedor">
         <div id="barraProgreso"></div>
       </div>
       <div id="textoProgreso">Progreso: 0 / 1000</div>
     </div>
 
-    <!-- PANTALLA 3: SECCIÓN AMIGOS -->
     <div id="pantallaAmigos" class="amigos-container oculto">
       <div class="titulo" style="margin-bottom: 4px;">Tus Amigos Invitados</div>
       <p style="font-size: 0.75rem; color: #aaa; margin-top: 0;">Gana bonificaciones invitando a tus compis de Telegram.</p>
-      
-      <div id="contenedorListaAmigos" class="lista-amigos">
-        Cargando amigos...
-      </div>
-
+      <div id="contenedorListaAmigos" class="lista-amigos">Cargando amigos...</div>
       <button class="btn-accion" onclick="abrirOpcionesReferido()">Compartir Enlace</button>
     </div>
   </div>
 
-  <!-- MENÚ INFERIOR FIJO Y FINO -->
   <div class="menu-inferior">
     <button class="menu-item activo" id="navJuego" onclick="cambiarSeccion('juego')">
       <span class="menu-icono">⚡</span>
@@ -443,7 +408,6 @@
     </button>
   </div>
 
-  <!-- MODAL DE REFERIDOS -->
   <div id="modalReferido" class="modal-overlay oculto">
     <div class="modal-contenido">
       <p>¿Cómo quieres compartir tu enlace?</p>
@@ -479,7 +443,6 @@
     var timerCapsula = null;
     var capsulaAbierta = false;
 
-    // Variables de Juego / Progreso / Nivel
     var monedasTotales = 0;
     var progresoActual = 0;
     var limiteMinado = 1000;
@@ -509,20 +472,26 @@
           .eq('telegram_id', usuario.id)
           .maybeSingle();
 
-        if (res.data && res.data.capsula_fin) {
-          timestampFin = parseInt(res.data.capsula_fin);
+        if (res.data) {
+          timestampFin = parseInt(res.data.capsula_fin || (ahora + 48 * 3600 * 1000));
           monedasTotales = res.data.monedas || 0;
           nivelActual = res.data.nivel || 1;
           expActual = res.data.exp || 0;
+          progresoActual = res.data.progreso_minado || 0;
 
           document.getElementById('monedas').innerText = monedasTotales;
           actualizarInterfazNivel();
+          actualizarInterfazMinado();
+
+          if (progresoActual >= limiteMinado) {
+            document.getElementById('estadoTexto').innerText = "RECLAMAR";
+            document.getElementById('estadoTexto').style.color = "#ffd700";
+          }
 
           var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
 
           if (segundosRestantes <= 0) {
             eclosionarCapsula();
-            return;
           } else {
             iniciarContadorLocal(segundosRestantes);
           }
@@ -531,9 +500,11 @@
           monedasTotales = 0;
           nivelActual = 1;
           expActual = 0;
+          progresoActual = 0;
 
           document.getElementById('monedas').innerText = 0;
           actualizarInterfazNivel();
+          actualizarInterfazMinado();
 
           iniciarContadorLocal(48 * 3600);
 
@@ -543,6 +514,7 @@
             monedas: 0,
             nivel: 1,
             exp: 0,
+            progreso_minado: 0,
             capsula_fin: timestampFin
           }, { onConflict: 'telegram_id' });
 
@@ -591,7 +563,7 @@
       }, 1000);
     }
 
-    async function actualizarSupabaseCapsula() {
+    async function actualizarSupabaseProgreso() {
       if (!usuario || !clientSupabase) return;
       try {
         await clientSupabase.from('jugadores').upsert({
@@ -600,6 +572,7 @@
           monedas: monedasTotales,
           nivel: nivelActual,
           exp: expActual,
+          progreso_minado: progresoActual,
           capsula_fin: timestampFin
         }, { onConflict: 'telegram_id' });
       } catch (e) {}
@@ -634,19 +607,18 @@
         if (segundosRestantes < 0) segundosRestantes = 0;
         
         iniciarContadorLocal(segundosRestantes);
-        actualizarSupabaseCapsula();
+        actualizarSupabaseProgreso();
         alert("¡Inversión exitosa! Tu cápsula ha acelerado su eclosión.");
       } catch (e) {
         alert("Transacción cancelada o error en la red TON.");
       }
     }
 
-    // FUNCIÓN DEL BOTÓN DEMO DE PRUEBA
     function forzarAperturaDemo() {
       tiempoRestanteSegundos = 0;
       timestampFin = Date.now();
       eclosionarCapsula();
-      actualizarSupabaseCapsula();
+      actualizarSupabaseProgreso();
     }
 
     function cambiarSeccion(seccion) {
@@ -789,6 +761,8 @@
       }
     }
 
+    // Intervalo de minado con guardado periódico en Supabase cada 10 segundos
+    var contadorGuardado = 0;
     setInterval(function() {
       var navActivo = document.getElementById('navJuego').classList.contains('activo');
       if (capsulaAbierta && navActivo) {
@@ -799,6 +773,14 @@
           if (progresoActual === limiteMinado) {
             document.getElementById('estadoTexto').innerText = "RECLAMAR";
             document.getElementById('estadoTexto').style.color = "#ffd700";
+            actualizarSupabaseProgreso();
+          }
+
+          // Guardar progreso automáticamente en Supabase cada 10 segundos para no perder nada si cierran la Mini App
+          contadorGuardado++;
+          if (contadorGuardado >= 10) {
+            contadorGuardado = 0;
+            actualizarSupabaseProgreso();
           }
         }
       }
@@ -819,11 +801,9 @@
     function recolectar() {
       if (progresoActual < limiteMinado) return;
 
-      // Sumar monedas y experiencia
       monedasTotales += limiteMinado;
-      expActual += 500; // Cada recolección otorga 500 de EXP
+      expActual += 500; 
 
-      // Comprobar si sube de nivel
       if (expActual >= expNecesaria) {
         expActual -= expNecesaria;
         nivelActual++;
@@ -839,7 +819,7 @@
       document.getElementById('estadoTexto').style.color = "#00ffcc";
       actualizarInterfazMinado();
 
-      actualizarSupabaseCapsula();
+      actualizarSupabaseProgreso();
     }
   </script>
 </body>
