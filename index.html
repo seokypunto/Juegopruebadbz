@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Criptomaniakos Tap</title>
+  <title>Criptomaniakos Miner</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -19,38 +19,91 @@
       margin: 0;
       user-select: none;
     }
+    .titulo {
+      font-size: 1rem;
+      color: #888;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
     #monedas {
       font-size: 3.5rem;
       font-weight: bold;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
       color: #ffd700;
     }
-    .btn-tap {
-      background-color: #e53935;
+    /* Estilo del asset minero (Cofre / Nodo) */
+    .btn-mina {
+      background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
       color: white;
-      border: none;
-      border-radius: 50%;
-      width: 160px;
-      height: 160px;
-      font-size: 2rem;
-      font-weight: bold;
+      border: 3px solid #444;
+      border-radius: 20px;
+      width: 200px;
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      box-shadow: 0 8px 0 #b71c1c;
+      box-shadow: 0 10px 0 #111;
+      transition: transform 0.1s;
+      position: relative;
     }
-    .btn-tap:active {
+    .btn-mina:active {
       transform: translateY(4px);
-      box-shadow: 0 4px 0 #b71c1c;
+      box-shadow: 0 6px 0 #111;
     }
-    /* Ocultamos la consola para que el jugador no la vea */
-    #log {
-      display: none;
+    .icono-mina {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
     }
+    .texto-estado {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #00ffcc;
+    }
+    /* Barra de progreso */
+    .barra-contenedor {
+      width: 80%;
+      max-width: 250px;
+      background: #222;
+      border-radius: 10px;
+      height: 14px;
+      margin-top: 25px;
+      overflow: hidden;
+      border: 1px solid #444;
+    }
+    #barraProgreso {
+      background: linear-gradient(90deg, #ff9800, #ffeb3b);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    #textoProgreso {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-top: 8px;
+    }
+    /* Consola oculta */
+    #log { display: none; }
   </style>
 </head>
 <body>
 
+  <div class="titulo">Balance Total</div>
   <div id="monedas">0</div>
-  <button class="btn-tap" onclick="hacerTap()">TAP!</button>
+
+  <!-- Asset interactivo en pantalla -->
+  <button class="btn-mina" id="btnMina" onclick="recolectar()">
+    <div class="icono-mina">💎</div>
+    <div class="texto-estado" id="estadoTexto">Minando...</div>
+  </button>
+
+  <!-- Barra de llenado -->
+  <div class="barra-contenedor">
+    <div id="barraProgreso"></div>
+  </div>
+  <div id="textoProgreso">Progreso: 0 / 10</div>
 
   <div id="log">=== CONSOLA ===</div>
 
@@ -63,25 +116,10 @@
       }
     }
 
-    window.onerror = function(msg, line) {
-      logger('ERROR SCRIPT: ' + msg);
-      return false;
-    };
-
-    logger('Script cargado correctamente.');
-
     var tg = window.Telegram ? window.Telegram.WebApp : null;
-    if (tg) {
-      tg.expand();
-      logger('Telegram SDK activo');
-    }
+    if (tg) { tg.expand(); }
 
     var usuario = (tg && tg.initDataUnsafe) ? tg.initDataUnsafe.user : null;
-    if (usuario) {
-      logger('Usuario: ' + usuario.id);
-    } else {
-      logger('Sin datos de usuario Telegram');
-    }
 
     var SUPABASE_URL = "https://jqxyxznxrfijwvvlzwqn.supabase.co";
     var SUPABASE_KEY = "sb_publishable_pN84HJ_JgrYxWRC4EDq_fA_ges02f51";
@@ -90,40 +128,63 @@
     try {
       if (window.supabase) {
         clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        logger('Supabase listo');
       }
-    } catch(e) {
-      logger('Error Supabase: ' + e.message);
+    } catch(e) {}
+
+    var monedasTotales = 0;
+    var progresoActual = 0;
+    var limiteMinado = 10; // Al llegar a 10 hay que reclamar
+
+    // Bucle automático de minado (suma 1 al progreso cada 1 segundo)
+    setInterval(function() {
+      if (progresoActual < limiteMinado) {
+        progresoActual++;
+        actualizarInterfaz();
+
+        if (progresoActual === limiteMinado) {
+          document.getElementById('estadoTexto').innerText = "¡RECLAMAR!";
+          document.getElementById('btnMina').style.borderColor = "#ffd700";
+        }
+      }
+    }, 1000);
+
+    function actualizarInterfaz() {
+      document.getElementById('barraProgreso').style.width = (progresoActual / limiteMinado) * 100 + '%';
+      document.getElementById('textoProgreso').innerText = 'Progreso: ' + progresoActual + ' / ' + limiteMinado;
     }
 
-    var contador = 0;
-
-    function hacerTap() {
-      contador = contador + 1;
-      document.getElementById('monedas').innerText = contador;
-      logger('Tap pulsado! Valor: ' + contador);
-
-      if (!usuario || !clientSupabase) {
-        logger('No se envia a BD (falta usuario o cliente)');
+    // Acción al hacer clic en el asset
+    function recolectar() {
+      // Solo permite recoger si la barra se ha llenado
+      if (progresoActual < limiteMinado) {
+        logger('Aún no está lleno, espera a que termine de minar.');
         return;
       }
 
+      // Sumamos las 10 monedas al total
+      monedasTotales += limiteMinado;
+      document.getElementById('monedas').innerText = monedasTotales;
+
+      // Reseteamos la barra
+      progresoActual = 0;
+      document.getElementById('estadoTexto').innerText = "Minando...";
+      document.getElementById('btnMina').style.borderColor = "#444";
+      actualizarInterfaz();
+
+      logger('¡Recogido! Total: ' + monedasTotales);
+
+      if (!usuario || !clientSupabase) return;
+
+      // Guardar en Supabase
       clientSupabase
         .from('jugadores')
         .upsert({ 
           telegram_id: usuario.id, 
           username: usuario.username || 'sin_nombre', 
-          monedas: contador 
+          monedas: monedasTotales 
         })
         .then(function(res) {
-          if (res.error) {
-            logger('Error BD: ' + res.error.message);
-          } else {
-            logger('¡GUARDADO EN BD!');
-          }
-        })
-        .catch(function(err) {
-          logger('Excepcion BD: ' + err.message);
+          if (res.error) logger('Error BD: ' + res.error.message);
         });
     }
   </script>
