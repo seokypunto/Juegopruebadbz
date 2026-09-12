@@ -208,7 +208,7 @@
     <div class="modal-contenido">
       <p>¿Cómo quieres compartir tu enlace?</p>
       <button class="btn-modal" onclick="copiarEnlaceDirecto()">Copiar enlace</button>
-      <button class="btn-modal" onclick="seleccionarChatTelegram()">Enviar a contacto / chat</button>
+      <button class="btn-modal" onclick="compartirTelegramDirecto()">Enviar a contacto / chat</button>
       <button class="btn-modal btn-cerrar" onclick="cerrarModalReferido()">Cancelar</button>
     </div>
   </div>
@@ -262,7 +262,7 @@
 
     var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
 
-    // --- SISTEMA DE REFERIDOS CON MODAL Y SELECTOR DE CHATS ---
+    // --- SISTEMA DE REFERIDOS CON MODAL Y COMPARTIR NATIVO ---
     function abrirOpcionesReferido() {
       if (!usuario) {
         alert("Error: Debes abrir este juego desde Telegram para generar tu enlace.");
@@ -294,19 +294,18 @@
       });
     }
 
-    function seleccionarChatTelegram() {
+    function compartirTelegramDirecto() {
       var enlaceRef = obtenerEnlaceRef();
       if (!enlaceRef) return;
 
+      var textoMensaje = "¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar!";
+      var enlaceShare = "https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent(textoMensaje);
+
       cerrarModalReferido();
 
-      // Si estamos en Telegram, utilizamos el selector de chats nativo para enviar el enlace
-      if (tg && typeof tg.switchInlineQuery === 'function') {
-        var textoParaCompartir = "¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar! " + enlaceRef;
-        tg.switchInlineQuery(textoParaCompartir, ['users', 'groups', 'channels']);
+      if (tg && typeof tg.openTelegramLink === 'function') {
+        tg.openTelegramLink(enlaceShare);
       } else {
-        // Alternativa web general si no soporta el selector nativo
-        var enlaceShare = "https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent("¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar!");
         window.open(enlaceShare, '_blank');
       }
     }
