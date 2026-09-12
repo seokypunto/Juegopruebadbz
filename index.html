@@ -168,7 +168,7 @@
     }
 
     .oculto { display: none !important; }
-    #log { display: none; }
+    #log { display: block; font-size: 0.75rem; color: #666; margin-top: 20px; max-height: 80px; overflow-y: auto; width: 90%; }
   </style>
 </head>
 <body>
@@ -239,33 +239,103 @@
       }
     } catch(e) {}
 
-    // --- LÓGICA DE LA CÁPSULA (48 Horas) ---
     var tiempoRestanteSegundos = 48 * 3600; 
+    var timestampFin = 0;
+    var timerCapsula = null;
 
-    function actualizarRelojCapsula() {
-      if (tiempoRestanteSegundos <= 0) {
-        eclosionarCapsula();
+    async function inicializarDatosUsuario() {
+      if (!usuario || !clientSupabase) {
+        logger('Modo local (sin Telegram o Supabase)');
+        iniciarContadorLocal(48 * 3600);
         return;
       }
-      
-      var horas = Math.floor(tiempoRestanteSegundos / 3600);
-      var minutos = Math.floor((tiempoRestanteSegundos % 3600) / 60);
-      var segundos = tiempoRestanteSegundos % 60;
 
-      document.getElementById('relojCapsula').innerText = 
-        (horas < 10 ? "0" : "") + horas + ":" + 
-        (minutos < 10 ? "0" : "") + minutos + ":" + 
-        (segundos < 10 ? "0" : "") + segundos;
-      
-      tiempoRestanteSegundos--;
+      try {
+        var res = await clientSupabase
+          .from('jugadores')
+          .select('*')
+          .eq('telegram_id', usuario.id)
+          .maybeSingle();
+
+        var ahora = Date.now();
+
+        if (res.data && res.data.capsula_fin) {
+          timestampFin = parseInt(res.data.capsula_fin);
+          monedasTotales = res.data.monedas || 0;
+          document.getElementById('monedas').innerText = monedasTotales;
+
+          var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
+          logger('Datos cargados de BD. Quedan ' + segundosRestantes + 's');
+
+          if (segundosRestantes <= 0) {
+            eclosionarCapsula();
+            return;
+          } else {
+            iniciarContadorLocal(segundosRestantes);
+          }
+        } else {
+          // Si no tiene cápsula guardada (NULL), creamos las 48 horas desde ahora y las guardamos
+          timestampFin = ahora + (48 * 3600 * 1000);
+          monedasTotales = (res.data && res.data.monedas) ? res.data.monedas : 0;
+          document.getElementById('monedas').innerText = monedasTotales;
+          
+          iniciarContadorLocal(48 * 3600);
+          await actualizarSupabaseCapsula();
+          logger('Cápsula inicializada a 48h en BD.');
+        }
+      } catch (e) {
+        logger('Error cargando datos: ' + e.message);
+        iniciarContadorLocal(48 * 3600);
+      }
     }
 
-    var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
+    function iniciarContadorLocal(segundosIniciales) {
+      tiempoRestanteSegundos = segundosIniciales;
+      if (timerCapsula) clearInterval(timerCapsula);
 
-    // --- SISTEMA DE REFERIDOS CON MODAL Y COMPARTIR NATIVO ---
+      timerCapsula = setInterval(function() {
+        if (tiempoRestanteSegundos <= 0) {
+          eclosionarCapsula();
+          return;
+        }
+        
+        var horas = Math.floor(tiempoRestanteSegundos / 3600);
+        var minutos = Math.floor((tiempoRestanteSegundos % 3600) / 60);
+        var segundos = tiempoRestanteSegundos % 60;
+
+        document.getElementById('relojCapsula').innerText = 
+          (horas < 10 ? "0" : "") + horas + ":" + 
+          (minutos < 10 ? "0" : "") + minutos + ":" + 
+          (segundos < 10 ? "0" : "") + segundos;
+        
+        tiempoRestanteSegundos--;
+      }, 1000);
+    }
+
+    async function actualizarSupabaseCapsula() {
+      if (!usuario || !clientSupabase) return;
+      try {
+        var res = await clientSupabase.from('jugadores').upsert({
+          telegram_id: usuario.id,
+          username: usuario.username || 'sin_nombre',
+          monedas: monedasTotales,
+          capsula_fin: timestampFin
+        }, { onConflict: 'telegram_id' });
+
+        if (res.error) {
+          logger('Error BD al guardar: ' + res.error.message);
+        } else {
+          logger('Sincronizado con Supabase OK.');
+        }
+      } catch (e) {
+        logger('Excepción guardando: ' + e.message);
+      }
+    }
+
+    // --- SISTEMA DE REFERIDOS ---
     function abrirOpcionesReferido() {
       if (!usuario) {
-        alert("Error: Debes abrir este juego desde Telegram para generar tu enlace.");
+        alert("Error: Debes abrir este juego desde Telegram.");
         return;
       }
       document.getElementById('modalReferido').classList.remove('oculto');
@@ -286,10 +356,10 @@
       if (!enlaceRef) return;
 
       navigator.clipboard.writeText(enlaceRef).then(function() {
-        alert("Enlace copiado al portapapeles con éxito.");
+        alert("Enlace copiado con éxito.");
         cerrarModalReferido();
       }).catch(function(err) {
-        prompt("Copia tu enlace de invitado:", enlaceRef);
+        prompt("Copia tu enlace:", enlaceRef);
         cerrarModalReferido();
       });
     }
@@ -298,7 +368,7 @@
       var enlaceRef = obtenerEnlaceRef();
       if (!enlaceRef) return;
 
-      var textoMensaje = "¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar!";
+      var textoMensaje = "¡Únete a mi cápsula en Criptomaniakos Miner!";
       var enlaceShare = "https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent(textoMensaje);
 
       cerrarModalReferido();
@@ -310,55 +380,32 @@
       }
     }
 
-    async function verificarReferidoEntrante() {
-      if (!usuario || !clientSupabase) return;
-      
-      var startParam = (tg && tg.initDataUnsafe) ? (tg.initDataUnsafe.start_param || tg.initDataUnsafe.startapp) : null;
-      if (!startParam || !startParam.startsWith("ref_")) return;
-
-      var referrerId = startParam.replace("ref_", "");
-      if (referrerId == usuario.id) return; 
-
-      try {
-        var resCheck = await clientSupabase
-          .from('referidos')
-          .select('*')
-          .eq('referido_id', usuario.id)
-          .maybeSingle();
-
-        if (resCheck.data) return; 
-
-        await clientSupabase.from('referidos').insert({
-          referrer_id: parseInt(referrerId),
-          referido_id: usuario.id
-        });
-
-        logger('Registrado con éxito mediante referido de: ' + referrerId);
-      } catch(e) {
-        logger('Error procesando referido: ' + e.message);
-      }
-    }
-
     if (clientSupabase) {
-      verificarReferidoEntrante();
+      inicializarDatosUsuario();
+    } else {
+      iniciarContadorLocal(48 * 3600);
     }
 
     function acelerarPago() {
-      tiempoRestanteSegundos -= 12 * 3600; 
-      if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
-      actualizarRelojCapsula();
-      logger('Inversión aplicada. Aceleración de cápsula.');
+      timestampFin -= (12 * 3600 * 1000);
+      var ahora = Date.now();
+      var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
+      if (segundosRestantes < 0) segundosRestantes = 0;
+      
+      iniciarContadorLocal(segundosRestantes);
+      actualizarSupabaseCapsula();
+      logger('Aceleración aplicada (-12h).');
     }
 
     function eclosionarCapsula() {
-      clearInterval(timerCapsula);
+      if (timerCapsula) clearInterval(timerCapsula);
       document.getElementById('pantallaCapsula').classList.add('oculto');
       document.getElementById('pantallaMinero').classList.remove('oculto');
-      logger('La cápsula ha eclosionado. Comienza el minado.');
+      logger('Cápsula eclosionada.');
     }
 
 
-    // --- LÓGICA DEL MINERO ---
+    // --- MINERO ---
     var monedasTotales = 0;
     var progresoActual = 0;
     var limiteMinado = 1000;
@@ -383,10 +430,7 @@
     }
 
     function recolectar() {
-      if (progresoActual < limiteMinado) {
-        logger('Aún no está lleno, espera a que termine de minar.');
-        return;
-      }
+      if (progresoActual < limiteMinado) return;
 
       monedasTotales += limiteMinado;
       document.getElementById('monedas').innerText = monedasTotales;
@@ -396,20 +440,8 @@
       document.getElementById('estadoTexto').style.color = "#00ffcc";
       actualizarInterfazMinado();
 
-      logger('Recogido! Total: ' + monedasTotales);
-
-      if (!usuario || !clientSupabase) return;
-
-      clientSupabase
-        .from('jugadores')
-        .upsert({ 
-          telegram_id: usuario.id, 
-          username: usuario.username || 'sin_nombre', 
-          monedas: monedasTotales 
-        })
-        .then(function(res) {
-          if (res.error) logger('Error BD: ' + res.error.message);
-        });
+      actualizarSupabaseCapsula();
+      logger('Monedas recolectadas. Total: ' + monedasTotales);
     }
   </script>
 </body>
