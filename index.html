@@ -449,7 +449,6 @@
     var nivelActual = 1;
     var expActual = 0;
     var expNecesaria = 5000;
-    var ultimaVezGuardado = Date.now();
 
     async function verificarYRegistrarUsuario() {
       if (!usuario || !clientSupabase) {
@@ -480,12 +479,40 @@
           expActual = res.data.exp || 0;
           progresoActual = res.data.progreso_minado || 0;
 
-          // CÁLCULO DE PROGRESO OFFLINE (Basado en el tiempo transcurrido desde que cerraste la app)
+          // Verificar si la cápsula ya terminó su cuenta atrás global
+          if (ahora >= timestampFin) {
+            capsulaAbierta = true;
+          }
+
           var ultimaActualizacionDb = parseInt(res.data.ultima_actualizacion || ahora);
           var segundosFuera = Math.floor((ahora - ultimaActualizacionDb) / 1000);
 
-          if (segundosFuera > 0 && progresoActual < limiteMinado && capsulaAbierta) {
-            progresoActual += segundosFuera;
+          // PROGRESO OFFLINE PASIVO (Solo si la cápsula ya está abierta)
+          if (segundosFuera > 0 && capsulaAbierta) {
+            var totalProgresoSimulado = progresoActual + segundosFuera;
+            
+            // Cuántas veces se ha llenado la barra entera mientras estabas fuera
+            var ciclosCompletados = Math.floor(totalProgresoSimulado / limiteMinado);
+            
+            if (ciclosCompletados > 0) {
+              // Si completó uno o más ciclos offline, sumamos las monedas automáticas
+              monedasTotales += (ciclosCompletados * limiteMinado);
+              expActual += (ciclosCompletados * 500); // Experiencia por cada ciclo completado
+
+              // Subir niveles si procede
+              while (expActual >= expNecesaria) {
+                expActual -= expNecesaria;
+                nivelActual++;
+                expNecesaria = Math.floor(expNecesaria * 1.3);
+              }
+
+              // El progreso actual se queda con el sobrante del último ciclo incompleto
+              progresoActual = totalProgresoSimulado % limiteMinado;
+            } else {
+              progresoActual = totalProgresoSimulado;
+            }
+
+            // Si se llenó exactamente o pasó de largo pero sin completar otro ciclo
             if (progresoActual >= limiteMinado) {
               progresoActual = limiteMinado;
             }
@@ -500,15 +527,18 @@
             document.getElementById('estadoTexto').style.color = "#ffd700";
           }
 
-          var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
-
-          if (segundosRestantes <= 0) {
+          if (capsulaAbierta) {
             eclosionarCapsula();
           } else {
-            iniciarContadorLocal(segundosRestantes);
+            var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
+            if (segundosRestantes <= 0) {
+              eclosionarCapsula();
+            } else {
+              iniciarContadorLocal(segundosRestantes);
+            }
           }
 
-          // Guardar inmediatamente el progreso calculado al abrir
+          // Guardar el nuevo estado actualizado tras el cálculo offline en Supabase
           actualizarSupabaseProgreso();
         } else {
           timestampFin = ahora + (48 * 3600 * 1000);
@@ -621,9 +651,11 @@
         timestampFin -= (12 * 3600 * 1000);
         var ahora = Date.now();
         var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
-        if (segundosRestantes < 0) segundosRestantes = 0;
-        
-        iniciarContadorLocal(segundosRestantes);
+        if (segundosRestantes <= 0) {
+          eclosionarCapsula();
+        } else {
+          iniciarContadorLocal(segundosRestantes);
+        }
         actualizarSupabaseProgreso();
         alert("¡Inversión exitosa! Tu cápsula ha acelerado su eclosión.");
       } catch (e) {
@@ -776,9 +808,14 @@
         document.getElementById('pantallaCapsula').classList.add('oculto');
         document.getElementById('pantallaMinero').classList.remove('oculto');
       }
+
+      if (progresoActual >= limiteMinado) {
+        document.getElementById('estadoTexto').innerText = "RECLAMAR";
+        document.getElementById('estadoTexto').style.color = "#ffd700";
+      }
     }
 
-    // Bucle de minado en tiempo real (cuando la app está abierta) y guardado automático cada 5 segundos
+    // Bucle de minado en tiempo real (cuando la app está abierta)
     setInterval(function() {
       var navActivo = document.getElementById('navJuego').classList.contains('activo');
       if (capsulaAbierta && navActivo) {
@@ -846,7 +883,7 @@
       document.getElementById('estadoTexto').style.color = "#00ffcc";
       actualizarInterfazMinado();
 
-      actualizarSupabaseProgreso();
+.      actualizarSupabaseProgreso();
     }
   </script>
 </body>
