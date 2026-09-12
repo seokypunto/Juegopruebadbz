@@ -6,6 +6,8 @@
   <title>Criptomaniakos Miner</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SDK de TON Connect UI para conectar la Wallet -->
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
     body {
       background-color: #121212;
@@ -29,7 +31,7 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      padding-bottom: 70px; /* Espacio para el menú inferior */
+      padding-bottom: 70px;
       overflow-y: auto;
     }
 
@@ -137,7 +139,15 @@
       color: #121212;
     }
 
-    /* ESTILOS SECCIÓN AMIGOS (VISTA DE PÁGINA) */
+    /* CONTENEDOR PARA EL BOTÓN DE TON CONNECT */
+    #ton-connect-button {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* ESTILOS SECCIÓN AMIGOS */
     .amigos-container {
       display: flex;
       flex-direction: column;
@@ -205,7 +215,7 @@
       font-weight: bold;
     }
 
-    /* MODAL DE REFERIDO (COMPARTIR) */
+    /* MODAL DE REFERIDO */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -266,7 +276,12 @@
       <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
       <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
-      <button class="btn-accion btn-pago" onclick="acelerarPago()">Acelerar con Inversion</button>
+      
+      <!-- BOTÓN DE ACELERAR CON WALLET TON -->
+      <button class="btn-accion btn-pago" onclick="acelerarConTonWallet()">Acelerar con Inversión (TON)</button>
+      
+      <!-- Widget nativo de conexión de TonConnect (opcional integrado) -->
+      <div id="ton-connect-button"></div>
     </div>
 
     <!-- PANTALLA 2: EL MINERO -->
@@ -310,7 +325,7 @@
     </button>
   </div>
 
-  <!-- MODAL DE REFERIDOS (COMPARTIR) -->
+  <!-- MODAL DE REFERIDOS -->
   <div id="modalReferido" class="modal-overlay oculto">
     <div class="modal-contenido">
       <p>¿Cómo quieres compartir tu enlace?</p>
@@ -323,6 +338,12 @@
   <div id="log">=== CONSOLA ===</div>
 
   <script>
+    // Inicializar TON Connect UI
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+      manifestUrl: 'https://seokypunto.github.io/Juegopruebadbz/tonconnect-manifest.json',
+      buttonRootId: 'ton-connect-button'
+    });
+
     var tg = window.Telegram ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); }
 
@@ -449,7 +470,51 @@
       } catch (e) {}
     }
 
-    /* GESTIÓN DE PANTALLAS Y MENÚ INFERIOR */
+    /* FUNCIÓN DE PAGO Y ACELERACIÓN REAL CON TON */
+    async function acelerarConTonWallet() {
+      // Comprobar si el usuario tiene la wallet conectada mediante TON Connect
+      if (!tonConnectUI.connected) {
+        try {
+          // Si no está conectada, abre el modal para que elija su wallet (Tonkeeper, etc.)
+          await tonConnectUI.openModal();
+          return;
+        } catch (error) {
+          alert("Debes conectar tu wallet TON para realizar la inversión.");
+          return;
+        }
+      }
+
+      // Definimos la transacción de pago (ejemplo: 0.5 TON para acelerar la cápsula)
+      // Dirección de destino de ejemplo o tu wallet personal de recaudación
+      const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 360, // 6 minutos de validez
+        messages: [
+          {
+            address: "UQD_TU_WALLET_DE_DESTINO_AQUI_O_CONTRATO", // Reemplaza por tu dirección TON
+            amount: "500000000" // En nanotons (0.5 TON = 500,000,000 nanotons)
+          }
+        ]
+      };
+
+      try {
+        alert("Abriendo tu Wallet para confirmar la inversión de aceleración...");
+        const result = await tonConnectUI.sendTransaction(transaction);
+        
+        // Si el pago es exitoso, restamos 12 horas (o el tiempo que desees)
+        timestampFin -= (12 * 3600 * 1000);
+        var ahora = Date.now();
+        var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
+        if (segundosRestantes < 0) segundosRestantes = 0;
+        
+        iniciarContadorLocal(segundosRestantes);
+        actualizarSupabaseCapsula();
+        alert("¡Inversión exitosa! Tu cápsula ha acelerado su eclosión.");
+
+      } catch (e) {
+        alert("Transacción cancelada o error en la red TON.");
+      }
+    }
+
     function cambiarSeccion(seccion) {
       document.getElementById('navJuego').classList.remove('activo');
       document.getElementById('navAmigos').classList.remove('activo');
@@ -579,21 +644,10 @@
       iniciarContadorLocal(48 * 3600);
     }
 
-    function acelerarPago() {
-      timestampFin -= (12 * 3600 * 1000);
-      var ahora = Date.now();
-      var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
-      if (segundosRestantes < 0) segundosRestantes = 0;
-      
-      iniciarContadorLocal(segundosRestantes);
-      actualizarSupabaseCapsula();
-    }
-
     function eclosionarCapsula() {
       capsulaAbierta = true;
       if (timerCapsula) clearInterval(timerCapsula);
       
-      // Si estamos en la pestaña del juego, mostramos el minero directamente
       var navActivo = document.getElementById('navJuego').classList.contains('activo');
       if (navActivo) {
         document.getElementById('pantallaCapsula').classList.add('oculto');
