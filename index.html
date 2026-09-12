@@ -103,7 +103,7 @@
   <div class="barra-contenedor">
     <div id="barraProgreso"></div>
   </div>
-  <div id="textoProgreso">Progreso: 0 / 10</div>
+  <div id="textoProgreso">Progreso: 0 / 1000</div>
 
   <div id="log">=== CONSOLA ===</div>
 
@@ -133,7 +133,7 @@
 
     var monedasTotales = 0;
     var progresoActual = 0;
-    var limiteMinado = 10; // Al llegar a 10 hay que reclamar
+    var limiteMinado = 1000; // Límite cambiado a 1000
 
     // Bucle automático de minado (suma 1 al progreso cada 1 segundo)
     setInterval(function() {
@@ -161,7 +161,7 @@
         return;
       }
 
-      // Sumamos las 10 monedas al total
+      // Sumamos las 1000 monedas al total
       monedasTotales += limiteMinado;
       document.getElementById('monedas').innerText = monedasTotales;
 
