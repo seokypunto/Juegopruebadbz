@@ -369,7 +369,7 @@
 
     <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
       <div class="titulo">Balance Total ZENI ($)</div>
-      <div id="balanceZeni">0.00000 ZENI</div>
+      <div id="balanceZeni">0.000 ZENI</div>
 
       <div class="nivel-info-container">
         <div class="nivel-texto-fila">
@@ -442,9 +442,8 @@
       }
     } catch(e) {}
 
-    // CONFIGURACIÓN DE MINADO EN ZENI ($0.05 al día / Límite 2 Horas)
-    const TASA_ZENI_POR_SEGUNDO = 0.05 / 86400; // ~0.0000005787 ZENI/seg
-    const LIMITE_SEGUNDOS_MINADO = 7200; // 2 horas de almacenamiento máx.
+    const TASA_ZENI_POR_SEGUNDO = 0.05 / 86400; 
+    const LIMITE_SEGUNDOS_MINADO = 7200; 
 
     var tiempoRestanteSegundos = 48 * 3600; 
     var timestampFin = 0;
@@ -452,7 +451,7 @@
     var capsulaAbierta = false;
 
     var zeniBalanceTotal = 0.0;
-    var segundosMinadosActuales = 0; // 0 a 7200 segundos
+    var segundosMinadosActuales = 0; 
     var nivelActual = 1;
     var expActual = 0;
     var expNecesaria = 5000;
@@ -481,7 +480,7 @@
 
         if (res.data) {
           timestampFin = parseInt(res.data.capsula_fin || (ahora + 48 * 3600 * 1000));
-          zeniBalanceTotal = parseFloat(res.data.monedas || 0); // Guardamos ZENI en la columna 'monedas'
+          zeniBalanceTotal = parseFloat(res.data.monedas || 0); 
           nivelActual = res.data.nivel || 1;
           expActual = res.data.exp || 0;
           segundosMinadosActuales = parseInt(res.data.progreso_minado || 0);
@@ -784,7 +783,6 @@
       }
     }
 
-    // BUCLE DE MINADO EN TIEMPO REAL (Cada segundo)
     setInterval(function() {
       var navActivo = document.getElementById('navJuego').classList.contains('activo');
       if (capsulaAbierta && navActivo) {
@@ -795,7 +793,6 @@
       }
     }, 1000);
 
-    // GUARDADO AUTOMÁTICO CADA 5 SEGUNDOS EN SUPABASE
     setInterval(function() {
       if (capsulaAbierta) {
         actualizarSupabaseProgreso();
@@ -815,9 +812,10 @@
     function actualizarInterfazMinado() {
       var zeniAcumuladoLive = segundosMinadosActuales * TASA_ZENI_POR_SEGUNDO;
       
-      // Actualiza contador flotante bajo Goku con 6 decimales para ver el avance continuo
+      // Balance total con máximo 3 decimales (ej: 5.120 ZENI)
+      document.getElementById('balanceZeni').innerText = zeniBalanceTotal.toFixed(3) + ' ZENI';
+      // Contador bajo Goku con precisión detallada
       document.getElementById('contadorMinadoLive').innerText = '+' + zeniAcumuladoLive.toFixed(6) + ' ZENI';
-      document.getElementById('balanceZeni').innerText = zeniBalanceTotal.toFixed(5) + ' ZENI';
 
       var porcentajeCapacidad = Math.floor((segundosMinadosActuales / LIMITE_SEGUNDOS_MINADO) * 100);
       document.getElementById('barraProgreso').style.width = porcentajeCapacidad + '%';
