@@ -123,6 +123,50 @@
       color: #121212;
     }
 
+    /* Estilos del menú modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-contenido {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 16px;
+      width: 85%;
+      max-width: 280px;
+      text-align: center;
+      border: 1px solid #444;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+    .modal-contenido p {
+      margin-top: 0;
+      font-size: 1rem;
+      color: #ddd;
+    }
+    .btn-modal {
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      padding: 10px;
+      border-radius: 8px;
+      width: 100%;
+      margin-top: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .btn-modal:active { background: #444; }
+    .btn-cerrar {
+      background: #b71c1c;
+      border: none;
+      margin-top: 15px;
+    }
+
     .oculto { display: none !important; }
     #log { display: none; }
   </style>
@@ -157,6 +201,16 @@
       <div id="barraProgreso"></div>
     </div>
     <div id="textoProgreso">Progreso: 0 / 1000</div>
+  </div>
+
+  <!-- MODAL DE OPCIONES DE INVITACIÓN -->
+  <div id="modalReferido" class="modal-overlay oculto">
+    <div class="modal-contenido">
+      <p>¿Cómo quieres compartir tu enlace?</p>
+      <button class="btn-modal" onclick="copiarEnlaceDirecto()">Copiar enlace</button>
+      <button class="btn-modal" onclick="seleccionarChatTelegram()">Enviar a contacto / chat</button>
+      <button class="btn-modal btn-cerrar" onclick="cerrarModalReferido()">Cancelar</button>
+    </div>
   </div>
 
   <div id="log">=== CONSOLA ===</div>
@@ -208,21 +262,53 @@
 
     var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
 
-    // --- SISTEMA DE REFERIDOS DIRECTO (@seoky_tapbot) ---
+    // --- SISTEMA DE REFERIDOS CON MODAL Y SELECTOR DE CHATS ---
     function abrirOpcionesReferido() {
       if (!usuario) {
         alert("Error: Debes abrir este juego desde Telegram para generar tu enlace.");
         return;
       }
-      
+      document.getElementById('modalReferido').classList.remove('oculto');
+    }
+
+    function cerrarModalReferido() {
+      document.getElementById('modalReferido').classList.add('oculto');
+    }
+
+    function obtenerEnlaceRef() {
+      if (!usuario) return "";
       var botName = "seoky_tapbot"; 
-      var enlaceRef = "https://t.me/" + botName + "?startapp=ref_" + usuario.id;
+      return "https://t.me/" + botName + "?startapp=ref_" + usuario.id;
+    }
+
+    function copiarEnlaceDirecto() {
+      var enlaceRef = obtenerEnlaceRef();
+      if (!enlaceRef) return;
 
       navigator.clipboard.writeText(enlaceRef).then(function() {
-        alert("Enlace de referido copiado con exito:\n\n" + enlaceRef);
+        alert("Enlace copiado al portapapeles con éxito.");
+        cerrarModalReferido();
       }).catch(function(err) {
         prompt("Copia tu enlace de invitado:", enlaceRef);
+        cerrarModalReferido();
       });
+    }
+
+    function seleccionarChatTelegram() {
+      var enlaceRef = obtenerEnlaceRef();
+      if (!enlaceRef) return;
+
+      cerrarModalReferido();
+
+      // Si estamos en Telegram, utilizamos el selector de chats nativo para enviar el enlace
+      if (tg && typeof tg.switchInlineQuery === 'function') {
+        var textoParaCompartir = "¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar! " + enlaceRef;
+        tg.switchInlineQuery(textoParaCompartir, ['users', 'groups', 'channels']);
+      } else {
+        // Alternativa web general si no soporta el selector nativo
+        var enlaceShare = "https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent("¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar!");
+        window.open(enlaceShare, '_blank');
+      }
     }
 
     async function verificarReferidoEntrante() {
@@ -248,7 +334,7 @@
           referido_id: usuario.id
         });
 
-        logger('Registrado con exito mediante referido de: ' + referrerId);
+        logger('Registrado con éxito mediante referido de: ' + referrerId);
       } catch(e) {
         logger('Error procesando referido: ' + e.message);
       }
@@ -262,14 +348,14 @@
       tiempoRestanteSegundos -= 12 * 3600; 
       if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
       actualizarRelojCapsula();
-      logger('Inversion aplicada. Aceleracion de capsula.');
+      logger('Inversión aplicada. Aceleración de cápsula.');
     }
 
     function eclosionarCapsula() {
       clearInterval(timerCapsula);
       document.getElementById('pantallaCapsula').classList.add('oculto');
       document.getElementById('pantallaMinero').classList.remove('oculto');
-      logger('La capsula ha eclosionado. Comienza el minado.');
+      logger('La cápsula ha eclosionado. Comienza el minado.');
     }
 
 
@@ -299,7 +385,7 @@
 
     function recolectar() {
       if (progresoActual < limiteMinado) {
-        logger('Aun no esta lleno, espera a que termine de minar.');
+        logger('Aún no está lleno, espera a que termine de minar.');
         return;
       }
 
