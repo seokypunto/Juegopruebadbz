@@ -479,7 +479,6 @@
           expActual = res.data.exp || 0;
           progresoActual = res.data.progreso_minado || 0;
 
-          // Verificar si la cápsula ya terminó su cuenta atrás global
           if (ahora >= timestampFin) {
             capsulaAbierta = true;
           }
@@ -487,32 +486,25 @@
           var ultimaActualizacionDb = parseInt(res.data.ultima_actualizacion || ahora);
           var segundosFuera = Math.floor((ahora - ultimaActualizacionDb) / 1000);
 
-          // PROGRESO OFFLINE PASIVO (Solo si la cápsula ya está abierta)
           if (segundosFuera > 0 && capsulaAbierta) {
             var totalProgresoSimulado = progresoActual + segundosFuera;
-            
-            // Cuántas veces se ha llenado la barra entera mientras estabas fuera
             var ciclosCompletados = Math.floor(totalProgresoSimulado / limiteMinado);
             
             if (ciclosCompletados > 0) {
-              // Si completó uno o más ciclos offline, sumamos las monedas automáticas
               monedasTotales += (ciclosCompletados * limiteMinado);
-              expActual += (ciclosCompletados * 500); // Experiencia por cada ciclo completado
+              expActual += (ciclosCompletados * 500);
 
-              // Subir niveles si procede
               while (expActual >= expNecesaria) {
                 expActual -= expNecesaria;
                 nivelActual++;
                 expNecesaria = Math.floor(expNecesaria * 1.3);
               }
 
-              // El progreso actual se queda con el sobrante del último ciclo incompleto
               progresoActual = totalProgresoSimulado % limiteMinado;
             } else {
               progresoActual = totalProgresoSimulado;
             }
 
-            // Si se llenó exactamente o pasó de largo pero sin completar otro ciclo
             if (progresoActual >= limiteMinado) {
               progresoActual = limiteMinado;
             }
@@ -538,7 +530,6 @@
             }
           }
 
-          // Guardar el nuevo estado actualizado tras el cálculo offline en Supabase
           actualizarSupabaseProgreso();
         } else {
           timestampFin = ahora + (48 * 3600 * 1000);
@@ -815,7 +806,6 @@
       }
     }
 
-    // Bucle de minado en tiempo real (cuando la app está abierta)
     setInterval(function() {
       var navActivo = document.getElementById('navJuego').classList.contains('activo');
       if (capsulaAbierta && navActivo) {
@@ -832,14 +822,12 @@
       }
     }, 1000);
 
-    // Guardado automático cada 5 segundos en segundo plano si la app sigue abierta
     setInterval(function() {
       if (capsulaAbierta) {
         actualizarSupabaseProgreso();
       }
     }, 5000);
 
-    // Eventos para guardar inmediatamente si el usuario minimiza, oculta o cierra la pestaña/app
     window.addEventListener('beforeunload', function() {
       actualizarSupabaseProgreso();
     });
@@ -883,7 +871,7 @@
       document.getElementById('estadoTexto').style.color = "#00ffcc";
       actualizarInterfazMinado();
 
-.      actualizarSupabaseProgreso();
+      actualizarSupabaseProgreso();
     }
   </script>
 </body>
