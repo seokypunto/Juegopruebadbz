@@ -1,4 +1,12 @@
-<style>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criptomaniakos Tap</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
     body {
       background-color: #121212;
       color: #ffffff;
@@ -50,3 +58,94 @@
       text-align: left;
     }
   </style>
+</head>
+<body>
+
+  <div id="monedas">0</div>
+  <button id="tapBtn" class="btn-tap" onclick="hacerTap()">TAP!</button>
+
+  <div id="log">=== DEBUG CONSOLE ===</div>
+
+  <script>
+    function logger(mensaje) {
+      const logDiv = document.getElementById('log');
+      logDiv.innerHTML += '<br>> ' + mensaje;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    window.onerror = function(msg, url, line) {
+      logger('ERROR SCRIPT: ' + msg + ' (Línea ' + line + ')');
+      return false;
+    };
+
+    // Inicializar Telegram SDK
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      logger('Telegram SDK: OK');
+    } else {
+      logger('Telegram SDK: NO Detectado');
+    }
+
+    const usuario = tg?.initDataUnsafe?.user;
+    if (usuario) {
+      logger('User: ' + (usuario.username || usuario.first_name) + ' (' + usuario.id + ')');
+    } else {
+      logger('User: NO detectado en initDataUnsafe');
+    }
+
+    // AVISO: Recuerda reemplazar estas dos variables con tus datos reales de Supabase:
+    const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co'; 
+    const SUPABASE_KEY = 'TU_KEY_PUBLICA';                   
+
+    let supabase;
+    try {
+      if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        logger('Supabase: Conectado');
+      } else {
+        logger('Supabase: CDN no cargado');
+      }
+    } catch(e) {
+      logger('Supabase Error: ' + e.message);
+    }
+
+    let contador = 0;
+
+    // Función que ejecuta el botón TAP
+    async function hacerTap() {
+      contador++;
+      document.getElementById('monedas').innerText = contador;
+      logger('¡Tap registrado! Contador: ' + contador);
+
+      if (!usuario) {
+        logger('Aviso: No guarda en BD (falta ID de Telegram)');
+        return;
+      }
+
+      if (!supabase) {
+        logger('Aviso: No guarda en BD (falta cliente Supabase)');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('jugadores')
+          .upsert({ 
+            telegram_id: usuario.id, 
+            username: usuario.username || 'sin_nombre', 
+            monedas: contador 
+          });
+
+        if (error) {
+          logger('Error Supabase: ' + error.message);
+        } else {
+          logger('¡Guardado con éxito en Supabase!');
+        }
+      } catch (err) {
+        logger('Excepción: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
