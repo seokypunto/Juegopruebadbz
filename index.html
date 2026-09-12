@@ -18,6 +18,7 @@
       height: 100vh;
       margin: 0;
       user-select: none;
+      position: relative;
     }
     .titulo {
       font-size: 1rem;
@@ -122,6 +123,9 @@
       background: linear-gradient(135deg, #f7971e, #ffd200);
       color: #121212;
     }
+    .btn-amigos {
+      background: linear-gradient(135deg, #614385, #516395);
+    }
 
     .modal-overlay {
       position: fixed;
@@ -166,8 +170,25 @@
       margin-top: 15px;
     }
 
+    .lista-amigos {
+      max-height: 150px;
+      overflow-y: auto;
+      text-align: left;
+      margin: 10px 0;
+      font-size: 0.85rem;
+      background: #121212;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    .amigo-item {
+      padding: 4px 0;
+      border-bottom: 1px solid #222;
+      color: #00ffcc;
+    }
+
     .oculto { display: none !important; }
-    #log { display: block; font-size: 0.75rem; color: #666; margin-top: 20px; max-height: 80px; overflow-y: auto; width: 90%; }
+    #log { display: none !important; }
   </style>
 </head>
 <body>
@@ -182,6 +203,7 @@
     <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
     <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
+    <button class="btn-accion btn-amigos" onclick="abrirModalAmigos()">Ver Amigos Invitados</button>
     <button class="btn-accion btn-pago" onclick="acelerarPago()">Acelerar con Inversion</button>
   </div>
 
@@ -201,13 +223,24 @@
     <div id="textoProgreso">Progreso: 0 / 1000</div>
   </div>
 
-  <!-- MODAL DE REFERIDOS -->
+  <!-- MODAL DE REFERIDOS (COMPARTIR) -->
   <div id="modalReferido" class="modal-overlay oculto">
     <div class="modal-contenido">
       <p>¿Cómo quieres compartir tu enlace?</p>
       <button class="btn-modal" onclick="copiarEnlaceDirecto()">Copiar enlace</button>
       <button class="btn-modal" onclick="compartirTelegramDirecto()">Enviar a contacto / chat</button>
       <button class="btn-modal btn-cerrar" onclick="cerrarModalReferido()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE LISTA DE AMIGOS -->
+  <div id="modalAmigos" class="modal-overlay oculto">
+    <div class="modal-contenido">
+      <p>Amigos Invitados</p>
+      <div id="contenedorListaAmigos" class="lista-amigos">
+        Cargando amigos...
+      </div>
+      <button class="btn-modal btn-cerrar" onclick="cerrarModalAmigos()">Cerrar</button>
     </div>
   </div>
 
@@ -372,6 +405,65 @@
 
     function cerrarModalReferido() {
       document.getElementById('modalReferido').classList.add('oculto');
+    }
+
+    async function abrirModalAmigos() {
+      if (!usuario || !clientSupabase) {
+        alert("Función disponible solo en línea.");
+        return;
+      }
+
+      document.getElementById('modalAmigos').classList.remove('oculto');
+      var contenedor = document.getElementById('contenedorListaAmigos');
+      contenedor.innerHTML = "Cargando amigos...";
+
+      try {
+        // Consultamos la tabla 'referidos' donde el referrer_id sea el usuario actual
+        var resRef = await clientSupabase
+          .from('referidos')
+          .select('referido_id')
+          .eq('referrer_id', usuario.id);
+
+        if (resRef.error) {
+          contenedor.innerHTML = "Error al cargar amigos.";
+          return;
+        }
+
+        var referidos = resRef.data || [];
+        if (referidos.length === 0) {
+          contenedor.innerHTML = "Aún no has invitado a ningún amigo.";
+          return;
+        }
+
+        // Obtenemos los IDs de los referidos
+        var idsReferidos = referidos.map(function(r) { return r.referido_id; });
+
+        // Buscamos los nombres de usuario en la tabla 'jugadores'
+        var resJugadores = await clientSupabase
+          .from('jugadores')
+          .select('username, telegram_id')
+          .in('telegram_id', idsReferidos);
+
+        var listaJugadores = resJugadores.data || [];
+        if (listaJugadores.length === 0) {
+          contenedor.innerHTML = "No se encontraron detalles de los amigos.";
+          return;
+        }
+
+        var htmlLista = "";
+        for (var i = 0; i < listaJugadores.length; i++) {
+          var nombre = listaJugadores[i].username || ("Usuario " + listaJugadores[i].telegram_id);
+          htmlLista += '<div class="amigo-item">👤 ' + nombre + '</div>';
+        }
+        contenedor.innerHTML = htmlLista;
+
+      } catch (e) {
+        contenedor.innerHTML = "Error de conexión.";
+      }
+    }
+
+    function cerrarModalAmigos() {
+      document.getElementById('modalAmigos').classList.add('oculto');
     }
 
     function obtenerEnlaceRef() {
