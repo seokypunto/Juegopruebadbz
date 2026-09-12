@@ -3,14 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Criptomaniakos Tap Game</title>
-
-  <!-- 1. Cargar el "cable de conexión" con Telegram y Supabase -->
+  <title>Criptomaniakos Tap</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    /* 2. EL DISEÑO (CSS): Colores, tamaños y centrado para móvil */
     body {
       background-color: #121212;
       color: #ffffff;
@@ -21,102 +17,134 @@
       justify-content: center;
       height: 100vh;
       margin: 0;
-      user-select: none; /* Evita que se seleccione el texto al hacer muchos clics */
+      user-select: none;
     }
-
     .contador {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: bold;
       margin-bottom: 20px;
-      color: #ffd700; /* Color dorado para las monedas */
+      color: #ffd700;
     }
-
-    .boton-tap {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      background: linear-gradient(145deg, #ff9900, #e67e22);
-      border: 4px solid #ffffff;
-      font-size: 1.5rem;
+    button {
+      background-color: #e53935;
       color: white;
+      border: none;
+      border-radius: 50%;
+      width: 160px;
+      height: 160px;
+      font-size: 2rem;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 10px 25px rgba(255, 153, 0, 0.5);
-      transition: transform 0.05s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      box-shadow: 0 8px 0 #b71c1c;
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-
-    /* Animación: cuando pulsas con el dedo, se hace un pelín más pequeño */
-    .boton-tap:active {
-      transform: scale(0.92);
+    button:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 #b71c1c;
+    }
+    #log {
+      margin-top: 25px;
+      width: 85%;
+      max-width: 380px;
+      background: #000;
+      color: #00ff00;
+      font-family: monospace;
+      font-size: 0.75rem;
+      padding: 10px;
+      border-radius: 8px;
+      height: 110px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      text-align: left;
     }
   </style>
 </head>
 <body>
 
-  <!-- LA PANTALLA (HTML): El contador y el botón -->
-  <div class="contador">🪙 <span id="puntos">0</span></div>
-  <div class="boton-tap" id="btnTap">¡TAP!</div>
+  <div class="contador" id="monedas">0</div>
+  <button id="tapBtn">TAP!</button>
+
+  <div id="log">=== DEBUG CONSOLE ===</div>
 
   <script>
-    // 3. EL CEREBRO (JavaScript)
-    
-    // Conectamos con el sistema de Telegram
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // Hace que el juego ocupe toda la pantalla del móvil
+    function logger(mensaje) {
+      const logDiv = document.getElementById('log');
+      logDiv.innerHTML += '<br>> ' + mensaje;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
 
-    // CONEXIÓN A TU BASE DE DATOS SUPABASE
-    // Sustituye estos dos textos por los datos de tu bloc de notas:
-    const SUPABASE_URL = "https://jqxyxznxrfijwvvlzwqn.supabase.co/rest/v1/"; 
-    const SUPABASE_KEY = "sb_publishable_pN84HJ_JgrYxWRC4EDq_fA_ges02f51";
+    window.onerror = function(msg, url, line) {
+      logger('ERROR SCRIPT: ' + msg + ' (Línea ' + line + ')');
+      return false;
+    };
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      logger('Telegram SDK: OK');
+    } else {
+      logger('Telegram SDK: NO Detectado');
+    }
 
-    // Cogemos los datos del usuario de Telegram
-    const usuario = tg.initDataUnsafe?.user || { id: 12345, username: "ModoPruebas" };
-    
-    let monedas = 0;
-    const elementoPuntos = document.getElementById("puntos");
-    const botonTap = document.getElementById("btnTap");
+    const usuario = tg?.initDataUnsafe?.user;
+    if (usuario) {
+      logger('User: ' + (usuario.username || usuario.first_name) + ' (' + usuario.id + ')');
+    } else {
+      logger('User: NO detectado en initDataUnsafe');
+    }
 
-    // Función 1: Buscar si el jugador ya existía en la base de datos
-    async function cargarProgreso() {
-      const { data } = await supabase
-        .from('jugadores')
-        .select('monedas')
-        .eq('telegram_id', usuario.id)
-        .single();
+    const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co'; // Inserta tu URL real si es diferente
+    const SUPABASE_KEY = 'TU_KEY_PUBLICA';                   // Inserta tu Key real si es diferente
 
-      if (data) {
-        monedas = data.monedas;
-        elementoPuntos.innerText = monedas;
+    let supabase;
+    try {
+      if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        logger('Supabase: Cliente creado');
       } else {
-        // Si es la primera vez que entra, lo creamos en Supabase
-        await supabase.from('jugadores').insert([
-          { telegram_id: usuario.id, username: usuario.username || "SinNombre", monedas: 0 }
-        ]);
+        logger('Supabase: CDN no cargado');
       }
+    } catch(e) {
+      logger('Supabase Init Error: ' + e.message);
     }
 
-    // Función 2: Guardar las monedas en Supabase
-    async function guardarEnSupabase() {
-      await supabase
-        .from('jugadores')
-        .update({ monedas: monedas })
-        .eq('telegram_id', usuario.id);
-    }
+    let contador = 0;
+    const btn = document.getElementById('tapBtn');
+    const displayMonedas = document.getElementById('monedas');
 
-    // Al hacer clic en el botón: suma 1 moneda y guarda en el servidor
-    botonTap.addEventListener("click", () => {
-      monedas++;
-      elementoPuntos.innerText = monedas;
-      guardarEnSupabase(); // Envia la actualización a Supabase
+    btn.addEventListener('click', async () => {
+      contador++;
+      displayMonedas.innerText = contador;
+      logger('Tap! Total local: ' + contador);
+
+      if (!usuario) {
+        logger('Aviso: No se envía (Falta usuario Telegram)');
+        return;
+      }
+
+      if (!supabase) {
+        logger('Aviso: No se envía (Falta cliente Supabase)');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('jugadores')
+          .upsert({ 
+            telegram_id: usuario.id, 
+            username: usuario.username || 'sin_nombre', 
+            monedas: contador 
+          });
+
+        if (error) {
+          logger('Error Supabase: ' + error.message);
+        } else {
+          logger('¡Guardado OK en Supabase!');
+        }
+      } catch (err) {
+        logger('Excepción: ' + err.message);
+      }
     });
-
-    // Cargar los datos nada más abrir la pantalla
-    cargarProgreso();
   </script>
 </body>
 </html>
