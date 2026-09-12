@@ -137,13 +137,12 @@
   <div id="pantallaCapsula" class="capsula-container">
     <div class="titulo">Cápsula de Nacimiento</div>
     
-    <!-- Aquí puedes cambiar la imagen de la cápsula o de Vegeta de bebé cuando la subas a assets/img/ -->
     <img src="https://raw.githubusercontent.com/seokypunto/Juegopruebadbz/main/assets/img/vegeta-blue.png?raw=true" class="icono-mina-img" alt="Cápsula Vegeta">
     
     <div style="font-size: 0.9rem; color: #bbb;">Tiempo restante para eclosionar:</div>
     <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
-    <button class="btn-accion" onclick="invitarAmigo()">👥 Invitar Amigo (-1 Hora)</button>
+    <button class="btn-accion" onclick="copiarEnlaceReferido()">👥 Invitar Amigo (-1 Hora)</button>
     <button class="btn-accion btn-pago" onclick="acelerarPago()">⚡ Acelerar con Inversión</button>
   </div>
 
@@ -191,7 +190,6 @@
     } catch(e) {}
 
     // --- LÓGICA DE LA CÁPSULA (48 Horas en segundos = 172800) ---
-    // Para pruebas puedes cambiar esto por un número pequeño (ej: 10 segundos)
     var tiempoRestanteSegundos = 48 * 3600; 
 
     function actualizarRelojCapsula() {
@@ -212,20 +210,69 @@
       tiempoRestanteSegundos--;
     }
 
-    // Temporizador de la cápsula (corre cada segundo)
     var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
 
-    function invitarAmigo() {
-      // Resta 1 hora (3600 segundos). Si baja de 0, eclosiona directamente.
-      tiempoRestanteSegundos -= 3600;
-      if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
-      actualizarRelojCapsula();
-      logger('¡Amigo invitado! -1 hora en la cápsula.');
+    // --- SISTEMA DE REFERIDOS ---
+    function copiarEnlaceReferido() {
+      if (!usuario) {
+        logger('No se pudo obtener el usuario de Telegram.');
+        return;
+      }
+
+      var botUsername = "seoky_tanbot"; 
+      var enlaceRef = "https://t.me/" + botUsername + "?start=ref_" + usuario.id;
+
+      navigator.clipboard.writeText(enlaceRef).then(function() {
+        logger('Enlace de referido copiado: ' + enlaceRef);
+        if (tg && tg.showAlert) {
+          tg.showAlert("¡Enlace copiado! Compártelo. Cuando tu amigo entre al bot a través de él, se te restará 1 hora automáticamente.");
+        } else {
+          alert("¡Enlace copiado al portapapeles!");
+        }
+      }).catch(function(err) {
+        logger('Error al copiar enlace: ' + err);
+      });
+    }
+
+    // Comprobar si el usuario actual entró mediante un enlace de referido al cargar la app
+    async function verificarReferidoEntrante() {
+      if (!usuario || !clientSupabase) return;
+      
+      var startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
+      if (!startParam || !startParam.startsWith("ref_")) return;
+
+      var referrerId = startParam.replace("ref_", "");
+      if (referrerId == usuario.id) return; // Evitar auto-referidos
+
+      try {
+        // Verificar si este usuario ya fue registrado como referido en la BD para no restar varias veces
+        var resCheck = await clientSupabase
+          .from('referidos')
+          .select('*')
+          .eq('referido_id', usuario.id)
+          .maybeSingle();
+
+        if (resCheck.data) return; // Ya contó este referido
+
+        // Registrar que este usuario fue invitado por referrerId
+        await clientSupabase.from('referidos').insert({
+          referrer_id: parseInt(referrerId),
+          referido_id: usuario.id
+        });
+
+        // Actualizar el tiempo del padrino (restarle 1 hora en la BD si estuviera guardado, o notificar)
+        logger('¡Registrado con éxito mediante referido de: ' + referrerId);
+      } catch(e) {
+        logger('Error procesando referido: ' + e.message);
+      }
+    }
+
+    if (clientSupabase) {
+      verificarReferidoEntrante();
     }
 
     function acelerarPago() {
-      // Simula pasarela de pago o reducción drástica por inversión
-      tiempoRestanteSegundos -= 12 * 3600; // Resta 12 horas de golpe por ejemplo
+      tiempoRestanteSegundos -= 12 * 3600; 
       if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
       actualizarRelojCapsula();
       logger('¡Inversión aplicada! Aceleración de cápsula.');
@@ -233,7 +280,6 @@
 
     function eclosionarCapsula() {
       clearInterval(timerCapsula);
-      // Ocultamos la cápsula y mostramos la pantalla de minado de Vegeta
       document.getElementById('pantallaCapsula').classList.add('oculto');
       document.getElementById('pantallaMinero').classList.remove('oculto');
       logger('¡La cápsula ha eclosionado! Comienza el minado.');
@@ -246,7 +292,6 @@
     var limiteMinado = 1000;
 
     setInterval(function() {
-      // El minero solo avanza si ya pasó la cápsula
       if (!document.getElementById('pantallaMinero').classList.contains('oculto')) {
         if (progresoActual < limiteMinado) {
           progresoActual++;
