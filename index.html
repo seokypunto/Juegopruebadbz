@@ -41,20 +41,9 @@
       transform: translateY(4px);
       box-shadow: 0 4px 0 #b71c1c;
     }
+    /* Ocultamos la consola para que el jugador no la vea */
     #log {
-      margin-top: 25px;
-      width: 85%;
-      max-width: 380px;
-      background: #000;
-      color: #00ff00;
-      font-family: monospace;
-      font-size: 0.75rem;
-      padding: 10px;
-      border-radius: 8px;
-      height: 120px;
-      overflow-y: auto;
-      border: 1px solid #333;
-      text-align: left;
+      display: none;
     }
   </style>
 </head>
@@ -74,7 +63,6 @@
       }
     }
 
-    // Capture global script errors
     window.onerror = function(msg, line) {
       logger('ERROR SCRIPT: ' + msg);
       return false;
@@ -95,9 +83,8 @@
       logger('Sin datos de usuario Telegram');
     }
 
-    // REEMPLAZA ESTAS DOS LINEAS CON TUS DATOS DE SUPABASE:
-    var SUPABASE_URL = 'https://jqxyxznxrfijwvvlzwqn.supabase.co';
-    var SUPABASE_KEY = 'sb_publishable_pN84HJ_JgrYxWRC4EDq_fA_ges02f51';
+    var SUPABASE_URL = "https://jqxyxznxrfijwvvlzwqn.supabase.co";
+    var SUPABASE_KEY = "sb_publishable_pN84HJ_JgrYxWRC4EDq_fA_ges02f51";
 
     var clientSupabase = null;
     try {
