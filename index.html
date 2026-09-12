@@ -39,9 +39,7 @@
       z-index: 9999;
       box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
-    .btn-demo-test:active {
-      transform: scale(0.95);
-    }
+    .btn-demo-test:active { transform: scale(0.95); }
 
     .contenido-principal {
       flex: 1;
@@ -63,11 +61,13 @@
       letter-spacing: 1.5px;
     }
     
-    #monedas {
-      font-size: 1.8rem;
-      font-weight: bold;
+    #balanceZeni {
+      font-size: 1.9rem;
+      font-weight: 800;
       margin-bottom: 4px;
-      color: #ffd700;
+      color: #00ffcc;
+      text-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+      font-family: monospace;
     }
 
     .nivel-info-container {
@@ -113,9 +113,7 @@
       cursor: pointer;
       transition: transform 0.1s;
     }
-    .btn-mina:active {
-      transform: scale(0.95);
-    }
+    .btn-mina:active { transform: scale(0.95); }
 
     @keyframes flotarGoku {
       0% { transform: translateY(0px); }
@@ -127,7 +125,7 @@
       width: 380px;
       max-width: 90vw;
       height: auto;
-      max-height: 42vh;
+      max-height: 38vh;
       object-fit: contain;
       margin-bottom: 2px;
       image-rendering: pixelated;
@@ -152,8 +150,17 @@
       animation: flotar 3s ease-in-out infinite;
     }
 
+    .contador-minado-live {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #ffd700;
+      font-family: monospace;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+      margin-top: 4px;
+    }
+
     .texto-estado {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: bold;
       color: #00ffcc;
       text-transform: uppercase;
@@ -166,8 +173,8 @@
       max-width: 240px;
       background: #222;
       border-radius: 8px;
-      height: 8px;
-      margin-top: 4px;
+      height: 6px;
+      margin-top: 6px;
       overflow: hidden;
       border: 1px solid #444;
     }
@@ -177,10 +184,10 @@
       width: 0%;
       transition: width 0.3s ease;
     }
-    #textoProgreso {
-      font-size: 0.7rem;
+    #textoCapacidad {
+      font-size: 0.68rem;
       color: #aaa;
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     .capsula-container {
@@ -216,9 +223,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.1s;
     }
-    .btn-accion:active {
-      transform: scale(0.97);
-    }
+    .btn-accion:active { transform: scale(0.97); }
     .btn-pago {
       background: linear-gradient(135deg, #f7971e, #ffd200);
       color: #121212;
@@ -295,9 +300,7 @@
       margin-bottom: 1px;
       line-height: 1;
     }
-    .menu-item span:last-child {
-      line-height: 1;
-    }
+    .menu-item span:last-child { line-height: 1; }
     .menu-item.activo {
       color: #00ffcc;
       font-weight: bold;
@@ -365,8 +368,8 @@
     </div>
 
     <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-      <div class="titulo">Balance Total</div>
-      <div id="monedas">0</div>
+      <div class="titulo">Balance Total ZENI ($)</div>
+      <div id="balanceZeni">0.00000 ZENI</div>
 
       <div class="nivel-info-container">
         <div class="nivel-texto-fila">
@@ -380,13 +383,14 @@
 
       <button class="btn-mina" id="btnMina" onclick="recolectar()">
         <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/goku-baby.png?raw=true" class="icono-mina-img" alt="Goku Baby">
+        <div id="contadorMinadoLive" class="contador-minado-live">+0.000000 ZENI</div>
         <div class="texto-estado" id="estadoTexto">Minando...</div>
       </button>
 
       <div class="barra-contenedor">
         <div id="barraProgreso"></div>
       </div>
-      <div id="textoProgreso">Progreso: 0 / 1000</div>
+      <div id="textoCapacidad">Almacenamiento: 0% (2h max)</div>
     </div>
 
     <div id="pantallaAmigos" class="amigos-container oculto">
@@ -438,14 +442,17 @@
       }
     } catch(e) {}
 
+    // CONFIGURACIÓN DE MINADO EN ZENI ($0.05 al día / Límite 2 Horas)
+    const TASA_ZENI_POR_SEGUNDO = 0.05 / 86400; // ~0.0000005787 ZENI/seg
+    const LIMITE_SEGUNDOS_MINADO = 7200; // 2 horas de almacenamiento máx.
+
     var tiempoRestanteSegundos = 48 * 3600; 
     var timestampFin = 0;
     var timerCapsula = null;
     var capsulaAbierta = false;
 
-    var monedasTotales = 0;
-    var progresoActual = 0;
-    var limiteMinado = 1000;
+    var zeniBalanceTotal = 0.0;
+    var segundosMinadosActuales = 0; // 0 a 7200 segundos
     var nivelActual = 1;
     var expActual = 0;
     var expNecesaria = 5000;
@@ -474,10 +481,10 @@
 
         if (res.data) {
           timestampFin = parseInt(res.data.capsula_fin || (ahora + 48 * 3600 * 1000));
-          monedasTotales = res.data.monedas || 0;
+          zeniBalanceTotal = parseFloat(res.data.monedas || 0); // Guardamos ZENI en la columna 'monedas'
           nivelActual = res.data.nivel || 1;
           expActual = res.data.exp || 0;
-          progresoActual = res.data.progreso_minado || 0;
+          segundosMinadosActuales = parseInt(res.data.progreso_minado || 0);
 
           if (ahora >= timestampFin) {
             capsulaAbierta = true;
@@ -487,37 +494,14 @@
           var segundosFuera = Math.floor((ahora - ultimaActualizacionDb) / 1000);
 
           if (segundosFuera > 0 && capsulaAbierta) {
-            var totalProgresoSimulado = progresoActual + segundosFuera;
-            var ciclosCompletados = Math.floor(totalProgresoSimulado / limiteMinado);
-            
-            if (ciclosCompletados > 0) {
-              monedasTotales += (ciclosCompletados * limiteMinado);
-              expActual += (ciclosCompletados * 500);
-
-              while (expActual >= expNecesaria) {
-                expActual -= expNecesaria;
-                nivelActual++;
-                expNecesaria = Math.floor(expNecesaria * 1.3);
-              }
-
-              progresoActual = totalProgresoSimulado % limiteMinado;
-            } else {
-              progresoActual = totalProgresoSimulado;
-            }
-
-            if (progresoActual >= limiteMinado) {
-              progresoActual = limiteMinado;
+            segundosMinadosActuales += segundosFuera;
+            if (segundosMinadosActuales > LIMITE_SEGUNDOS_MINADO) {
+              segundosMinadosActuales = LIMITE_SEGUNDOS_MINADO;
             }
           }
 
-          document.getElementById('monedas').innerText = monedasTotales;
           actualizarInterfazNivel();
           actualizarInterfazMinado();
-
-          if (progresoActual >= limiteMinado) {
-            document.getElementById('estadoTexto').innerText = "RECLAMAR";
-            document.getElementById('estadoTexto').style.color = "#ffd700";
-          }
 
           if (capsulaAbierta) {
             eclosionarCapsula();
@@ -533,12 +517,11 @@
           actualizarSupabaseProgreso();
         } else {
           timestampFin = ahora + (48 * 3600 * 1000);
-          monedasTotales = 0;
+          zeniBalanceTotal = 0.0;
           nivelActual = 1;
           expActual = 0;
-          progresoActual = 0;
+          segundosMinadosActuales = 0;
 
-          document.getElementById('monedas').innerText = 0;
           actualizarInterfazNivel();
           actualizarInterfazMinado();
 
@@ -606,10 +589,10 @@
         await clientSupabase.from('jugadores').upsert({
           telegram_id: usuario.id,
           username: usuario.username || 'sin_nombre',
-          monedas: monedasTotales,
+          monedas: zeniBalanceTotal,
           nivel: nivelActual,
           exp: expActual,
-          progreso_minado: progresoActual,
+          progreso_minado: segundosMinadosActuales,
           capsula_fin: timestampFin,
           ultima_actualizacion: Date.now()
         }, { onConflict: 'telegram_id' });
@@ -799,29 +782,20 @@
         document.getElementById('pantallaCapsula').classList.add('oculto');
         document.getElementById('pantallaMinero').classList.remove('oculto');
       }
-
-      if (progresoActual >= limiteMinado) {
-        document.getElementById('estadoTexto').innerText = "RECLAMAR";
-        document.getElementById('estadoTexto').style.color = "#ffd700";
-      }
     }
 
+    // BUCLE DE MINADO EN TIEMPO REAL (Cada segundo)
     setInterval(function() {
       var navActivo = document.getElementById('navJuego').classList.contains('activo');
       if (capsulaAbierta && navActivo) {
-        if (progresoActual < limiteMinado) {
-          progresoActual++;
+        if (segundosMinadosActuales < LIMITE_SEGUNDOS_MINADO) {
+          segundosMinadosActuales++;
           actualizarInterfazMinado();
-
-          if (progresoActual === limiteMinado) {
-            document.getElementById('estadoTexto').innerText = "RECLAMAR";
-            document.getElementById('estadoTexto').style.color = "#ffd700";
-            actualizarSupabaseProgreso();
-          }
         }
       }
     }, 1000);
 
+    // GUARDADO AUTOMÁTICO CADA 5 SEGUNDOS EN SUPABASE
     setInterval(function() {
       if (capsulaAbierta) {
         actualizarSupabaseProgreso();
@@ -839,8 +813,24 @@
     });
 
     function actualizarInterfazMinado() {
-      document.getElementById('barraProgreso').style.width = (progresoActual / limiteMinado) * 100 + '%';
-      document.getElementById('textoProgreso').innerText = 'Progreso: ' + progresoActual + ' / ' + limiteMinado;
+      var zeniAcumuladoLive = segundosMinadosActuales * TASA_ZENI_POR_SEGUNDO;
+      
+      // Actualiza contador flotante bajo Goku con 6 decimales para ver el avance continuo
+      document.getElementById('contadorMinadoLive').innerText = '+' + zeniAcumuladoLive.toFixed(6) + ' ZENI';
+      document.getElementById('balanceZeni').innerText = zeniBalanceTotal.toFixed(5) + ' ZENI';
+
+      var porcentajeCapacidad = Math.floor((segundosMinadosActuales / LIMITE_SEGUNDOS_MINADO) * 100);
+      document.getElementById('barraProgreso').style.width = porcentajeCapacidad + '%';
+
+      if (segundosMinadosActuales >= LIMITE_SEGUNDOS_MINADO) {
+        document.getElementById('estadoTexto').innerText = "¡LLENO! RECOLECTAR";
+        document.getElementById('estadoTexto').style.color = "#ffd700";
+        document.getElementById('textoCapacidad').innerText = "Almacenamiento: 100% (¡Llena!)";
+      } else {
+        document.getElementById('estadoTexto').innerText = "Minando...";
+        document.getElementById('estadoTexto').style.color = "#00ffcc";
+        document.getElementById('textoCapacidad').innerText = "Almacenamiento: " + porcentajeCapacidad + "% (2h máx)";
+      }
     }
 
     function actualizarInterfazNivel() {
@@ -851,9 +841,10 @@
     }
 
     function recolectar() {
-      if (progresoActual < limiteMinado) return;
+      if (segundosMinadosActuales <= 0) return;
 
-      monedasTotales += limiteMinado;
+      var zeniAcumulado = segundosMinadosActuales * TASA_ZENI_POR_SEGUNDO;
+      zeniBalanceTotal += zeniAcumulado;
       expActual += 500; 
 
       if (expActual >= expNecesaria) {
@@ -863,14 +854,9 @@
         alert("¡Felicidades! Goku baby ha subido al Nivel " + nivelActual);
       }
 
-      document.getElementById('monedas').innerText = monedasTotales;
+      segundosMinadosActuales = 0;
       actualizarInterfazNivel();
-
-      progresoActual = 0;
-      document.getElementById('estadoTexto').innerText = "Minando...";
-      document.getElementById('estadoTexto').style.color = "#00ffcc";
       actualizarInterfazMinado();
-
       actualizarSupabaseProgreso();
     }
   </script>
