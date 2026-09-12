@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Criptomaniakos Miner</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,12 +11,13 @@
     body {
       background-color: #121212;
       color: #ffffff;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
       height: 100vh;
+      height: 100dvh;
       margin: 0;
       user-select: none;
       position: relative;
@@ -30,21 +31,23 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      padding-bottom: 60px;
+      padding: 10px 16px 70px 16px;
+      box-sizing: border-box;
       overflow-y: auto;
     }
 
     .titulo {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       color: #888;
-      margin-bottom: 5px;
+      margin-bottom: 2px;
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
     }
+    
     #monedas {
-      font-size: 3rem;
+      font-size: 2.4rem;
       font-weight: bold;
-      margin-bottom: 15px;
+      margin-bottom: 8px;
       color: #ffd700;
     }
     
@@ -62,17 +65,19 @@
       transform: scale(0.95);
     }
 
+    /* IMÁGENES ADAPTABLES PARA QUE NO SE CHAFEN */
     .icono-mina-img {
-      width: 240px;
-      height: 240px;
+      width: 170px;
+      height: 170px;
+      max-height: 38vh;
       object-fit: contain;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
 
     .texto-estado {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: bold;
       color: #00ffcc;
       text-transform: uppercase;
@@ -80,12 +85,12 @@
     }
 
     .barra-contenedor {
-      width: 75%;
-      max-width: 260px;
+      width: 80%;
+      max-width: 240px;
       background: #222;
       border-radius: 8px;
-      height: 14px;
-      margin-top: 20px;
+      height: 12px;
+      margin-top: 12px;
       overflow: hidden;
       border: 1px solid #444;
     }
@@ -96,9 +101,9 @@
       transition: width 0.3s ease;
     }
     #textoProgreso {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #aaa;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .capsula-container {
@@ -106,14 +111,14 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      width: 90%;
+      width: 100%;
       max-width: 320px;
     }
     .contador-capsula {
-      font-size: 2.2rem;
+      font-size: 1.8rem;
       font-weight: bold;
       color: #00ffcc;
-      margin: 10px 0;
+      margin: 6px 0;
       font-family: monospace;
     }
     .btn-accion {
@@ -121,12 +126,12 @@
       color: white;
       border: none;
       border-radius: 10px;
-      padding: 10px 16px;
-      font-size: 0.9rem;
+      padding: 9px 14px;
+      font-size: 0.85rem;
       font-weight: bold;
       cursor: pointer;
       width: 100%;
-      margin-top: 8px;
+      margin-top: 6px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.1s;
     }
@@ -139,7 +144,7 @@
     }
 
     #ton-connect-button {
-      margin-top: 8px;
+      margin-top: 6px;
       display: flex;
       justify-content: center;
       width: 100%;
@@ -149,16 +154,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 90%;
+      width: 100%;
       max-width: 340px;
       text-align: center;
     }
     .lista-amigos {
-      max-height: 200px;
+      max-height: 180px;
       overflow-y: auto;
       text-align: left;
       width: 100%;
-      margin: 12px 0;
+      margin: 10px 0;
       font-size: 0.85rem;
       background: #181818;
       padding: 10px;
@@ -167,7 +172,7 @@
       box-sizing: border-box;
     }
     .amigo-item {
-      padding: 6px 4px;
+      padding: 5px 4px;
       border-bottom: 1px solid #2a2a2a;
       color: #00ffcc;
       display: flex;
@@ -175,7 +180,7 @@
       gap: 6px;
     }
 
-    /* MENÚ INFERIOR ESTILIZADO Y FINO */
+    /* MENÚ INFERIOR FIJO Y FINO */
     .menu-inferior {
       position: absolute;
       bottom: 0;
@@ -274,7 +279,7 @@
       
       <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/assets/img/capsule.png?raw=true" class="icono-mina-img" alt="Cápsula">
       
-      <div style="font-size: 0.85rem; color: #bbb;">Tiempo restante para eclosionar:</div>
+      <div style="font-size: 0.8rem; color: #bbb;">Tiempo restante para eclosionar:</div>
       <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
       <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
@@ -301,8 +306,8 @@
 
     <!-- PANTALLA 3: SECCIÓN AMIGOS -->
     <div id="pantallaAmigos" class="amigos-container oculto">
-      <div class="titulo" style="margin-bottom: 8px;">Tus Amigos Invitados</div>
-      <p style="font-size: 0.8rem; color: #aaa; margin-top: 0;">Gana bonificaciones invitando a tus compis de Telegram.</p>
+      <div class="titulo" style="margin-bottom: 6px;">Tus Amigos Invitados</div>
+      <p style="font-size: 0.75rem; color: #aaa; margin-top: 0;">Gana bonificaciones invitando a tus compis de Telegram.</p>
       
       <div id="contenedorListaAmigos" class="lista-amigos">
         Cargando amigos...
