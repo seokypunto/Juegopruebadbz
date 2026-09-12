@@ -76,7 +76,20 @@
       image-rendering: crisp-edges;
     }
 
-    /* CÁPSULA GIGANTE Y ADAPTABLE */
+    /* ANIMACIÓN DE FLOTACIÓN PARA LA CÁPSULA */
+    @keyframes flotar {
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    /* CÁPSULA GIGANTE, ADAPTABLE Y CON MOVIMIENTO */
     .capsula-img {
       width: 280px;
       max-width: 82vw;
@@ -84,6 +97,7 @@
       object-fit: contain;
       margin: 4px 0;
       filter: drop-shadow(0 0 15px rgba(0, 180, 255, 0.25));
+      animation: flotar 3s ease-in-out infinite;
     }
 
     .texto-estado {
