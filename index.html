@@ -192,7 +192,7 @@
     <div class="titulo">Balance Total</div>
     <div id="monedas">0</div>
 
-    <button class="btn-mina" id="btnMina" onclick="recolectار()">
+    <button class="btn-mina" id="btnMina" onclick="recolectar()">
       <img src="https://raw.githubusercontent.com/seokypunto/Juegopruebadbz/main/assets/img/vegeta-blue.png?raw=true" class="icono-mina-img" alt="Vegeta Blue">
       <div class="texto-estado" id="estadoTexto">Minando...</div>
     </button>
@@ -262,7 +262,7 @@
 
     var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
 
-    // --- SISTEMA DE REFERIDOS ROBUSTO ---
+    // --- SISTEMA DE REFERIDOS CON ENLACE DIRECTO DE MINI APP ---
     function abrirOpcionesReferido() {
       if (!usuario) {
         logger('No se pudo obtener el usuario de Telegram.');
@@ -278,9 +278,9 @@
 
     function obtenerEnlaceRef() {
       if (!usuario) return "";
-      // Usamos el enlace web oficial de la Mini App o el esquema directo compatible con Telegram
-      var botName = "seokypunto_bot"; // Bot exacto configurado
-      return "https://t.me/" + botName + "?start=ref_" + usuario.id;
+      // Enlace directo compatible con Mini Apps de Telegram usando startapp
+      var urlMiniApp = "https://t.me/seokypunto_bot"; 
+      return urlMiniApp + "?startapp=ref_" + usuario.id;
     }
 
     function copiarEnlaceDirecto() {
@@ -313,7 +313,8 @@
     async function verificarReferidoEntrante() {
       if (!usuario || !clientSupabase) return;
       
-      var startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
+      // Soporte tanto para start_param antiguo como para startapp moderno de Telegram
+      var startParam = (tg && tg.initDataUnsafe) ? (tg.initDataUnsafe.start_param || tg.initDataUnsafe.startapp) : null;
       if (!startParam || !startParam.startsWith("ref_")) return;
 
       var referrerId = startParam.replace("ref_", "");
@@ -371,7 +372,7 @@
 
           if (progresoActual === limiteMinado) {
             document.getElementById('estadoTexto').innerText = "¡RECLAMAR!";
-            document.getElementById('estadoTexto').style.color = "#ffd700";
+            document.getElementById('estadoTexto'].style.color = "#ffd700";
           }
         }
       }
