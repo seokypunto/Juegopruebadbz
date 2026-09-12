@@ -123,7 +123,6 @@
       color: #121212;
     }
 
-    /* Estilos del menú modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -173,7 +172,7 @@
 </head>
 <body>
 
-  <!-- ================= PANTALLA 1: LA CÁPSULA ================= -->
+  <!-- PANTALLA 1: LA CÁPSULA -->
   <div id="pantallaCapsula" class="capsula-container">
     <div class="titulo">Cápsula de Nacimiento</div>
     
@@ -186,8 +185,7 @@
     <button class="btn-accion btn-pago" onclick="acelerarPago()">Acelerar con Inversion</button>
   </div>
 
-
-  <!-- ================= PANTALLA 2: EL MINERO ================= -->
+  <!-- PANTALLA 2: EL MINERO -->
   <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
     <div class="titulo">Balance Total</div>
     <div id="monedas">0</div>
@@ -203,7 +201,7 @@
     <div id="textoProgreso">Progreso: 0 / 1000</div>
   </div>
 
-  <!-- MODAL DE OPCIONES DE INVITACIÓN -->
+  <!-- MODAL DE REFERIDOS -->
   <div id="modalReferido" class="modal-overlay oculto">
     <div class="modal-contenido">
       <p>¿Cómo quieres compartir tu enlace?</p>
@@ -243,11 +241,20 @@
     var timestampFin = 0;
     var timerCapsula = null;
 
-    async function inicializarDatosUsuario() {
+    async function verificarYRegistrarUsuario() {
       if (!usuario || !clientSupabase) {
         logger('Modo local (sin Telegram o Supabase)');
         iniciarContadorLocal(48 * 3600);
         return;
+      }
+
+      var ahora = Date.now();
+      var startParam = (tg && tg.initDataUnsafe) ? (tg.initDataUnsafe.start_param || tg.initDataUnsafe.startapp) : null;
+      var referrerId = null;
+
+      if (startParam && startParam.startsWith("ref_")) {
+        referrerId = parseInt(startParam.replace("ref_", ""));
+        if (referrerId === usuario.id) referrerId = null; 
       }
 
       try {
@@ -257,15 +264,13 @@
           .eq('telegram_id', usuario.id)
           .maybeSingle();
 
-        var ahora = Date.now();
-
         if (res.data && res.data.capsula_fin) {
           timestampFin = parseInt(res.data.capsula_fin);
           monedasTotales = res.data.monedas || 0;
           document.getElementById('monedas').innerText = monedasTotales;
 
           var segundosRestantes = Math.floor((timestampFin - ahora) / 1000);
-          logger('Datos cargados de BD. Quedan ' + segundosRestantes + 's');
+          logger('Datos cargados. Quedan ' + segundosRestantes + 's');
 
           if (segundosRestantes <= 0) {
             eclosionarCapsula();
@@ -274,17 +279,42 @@
             iniciarContadorLocal(segundosRestantes);
           }
         } else {
-          // Si no tiene cápsula guardada (NULL), creamos las 48 horas desde ahora y las guardamos
           timestampFin = ahora + (48 * 3600 * 1000);
-          monedasTotales = (res.data && res.data.monedas) ? res.data.monedas : 0;
-          document.getElementById('monedas').innerText = monedasTotales;
-          
+          monedasTotales = 0;
+          document.getElementById('monedas').innerText = 0;
+
           iniciarContadorLocal(48 * 3600);
-          await actualizarSupabaseCapsula();
-          logger('Cápsula inicializada a 48h en BD.');
+
+          await clientSupabase.from('jugadores').upsert({
+            telegram_id: usuario.id,
+            username: usuario.username || 'sin_nombre',
+            monedas: 0,
+            capsula_fin: timestampFin
+          }, { onConflict: 'telegram_id' });
+
+          if (referrerId) {
+            try {
+              var resCheckRef = await clientSupabase
+                .from('referidos')
+                .select('*')
+                .eq('referido_id', usuario.id)
+                .maybeSingle();
+
+              if (!resCheckRef.data) {
+                await clientSupabase.from('referidos').insert({
+                  referrer_id: referrerId,
+                  referido_id: usuario.id
+                });
+                logger('Registrado con éxito bajo el padrino: ' + referrerId);
+              }
+            } catch (errRef) {
+              logger('Aviso tabla referidos: ' + errRef.message);
+            }
+          }
+          logger('Nuevo usuario inicializado correctamente.');
         }
       } catch (e) {
-        logger('Error cargando datos: ' + e.message);
+        logger('Error en inicialización: ' + e.message);
         iniciarContadorLocal(48 * 3600);
       }
     }
@@ -332,7 +362,6 @@
       }
     }
 
-    // --- SISTEMA DE REFERIDOS ---
     function abrirOpcionesReferido() {
       if (!usuario) {
         alert("Error: Debes abrir este juego desde Telegram.");
@@ -381,7 +410,7 @@
     }
 
     if (clientSupabase) {
-      inicializarDatosUsuario();
+      verificarYRegistrarUsuario();
     } else {
       iniciarContadorLocal(48 * 3600);
     }
@@ -404,8 +433,6 @@
       logger('Cápsula eclosionada.');
     }
 
-
-    // --- MINERO ---
     var monedasTotales = 0;
     var progresoActual = 0;
     var limiteMinado = 1000;
