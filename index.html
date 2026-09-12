@@ -138,8 +138,8 @@
     <div style="font-size: 0.9rem; color: #bbb;">Tiempo restante para eclosionar:</div>
     <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
-    <button class="btn-accion" onclick="abrirOpcionesReferido()">👥 Invitar Amigo (-1 Hora)</button>
-    <button class="btn-accion btn-pago" onclick="acelerarPago()">⚡ Acelerar con Inversión</button>
+    <button class="btn-accion" onclick="abrirOpcionesReferido()">Invitar Amigo (-1 Hora)</button>
+    <button class="btn-accion btn-pago" onclick="acelerarPago()">Acelerar con Inversion</button>
   </div>
 
 
@@ -219,7 +219,7 @@
       var enlaceRef = "https://t.me/" + botName + "?startapp=ref_" + usuario.id;
 
       navigator.clipboard.writeText(enlaceRef).then(function() {
-        alert("¡Enlace de referido copiado con éxito!\n\n" + enlaceRef);
+        alert("Enlace de referido copiado con exito:\n\n" + enlaceRef);
       }).catch(function(err) {
         prompt("Copia tu enlace de invitado:", enlaceRef);
       });
@@ -232,7 +232,7 @@
       if (!startParam || !startParam.startsWith("ref_")) return;
 
       var referrerId = startParam.replace("ref_", "");
-      if (referrerId == usuario.id) return; // Evitar auto-referidos
+      if (referrerId == usuario.id) return; 
 
       try {
         var resCheck = await clientSupabase
@@ -248,7 +248,7 @@
           referido_id: usuario.id
         });
 
-        logger('¡Registrado con éxito mediante referido de: ' + referrerId);
+        logger('Registrado con exito mediante referido de: ' + referrerId);
       } catch(e) {
         logger('Error procesando referido: ' + e.message);
       }
@@ -262,14 +262,14 @@
       tiempoRestanteSegundos -= 12 * 3600; 
       if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
       actualizarRelojCapsula();
-      logger('⚡ ¡Inversión aplicada! Aceleración de cápsula.');
+      logger('Inversion aplicada. Aceleracion de capsula.');
     }
 
     function eclosionarCapsula() {
       clearInterval(timerCapsula);
       document.getElementById('pantallaCapsula').classList.add('oculto');
       document.getElementById('pantallaMinero').classList.remove('oculto');
-      logger('¡La cápsula ha eclosionado! Comienza el minado.');
+      logger('La capsula ha eclosionado. Comienza el minado.');
     }
 
 
@@ -285,7 +285,7 @@
           actualizarInterfazMinado();
 
           if (progresoActual === limiteMinado) {
-            document.getElementById('estadoTexto').innerText = "¡RECLAMAR!";
+            document.getElementById('estadoTexto').innerText = "RECLAMAR";
             document.getElementById('estadoTexto').style.color = "#ffd700";
           }
         }
@@ -299,7 +299,7 @@
 
     function recolectar() {
       if (progresoActual < limiteMinado) {
-        logger('Aún no está lleno, espera a que termine de minar.');
+        logger('Aun no esta lleno, espera a que termine de minar.');
         return;
       }
 
@@ -311,7 +311,7 @@
       document.getElementById('estadoTexto').style.color = "#00ffcc";
       actualizarInterfazMinado();
 
-      logger('¡Recogido! Total: ' + monedasTotales);
+      logger('Recogido! Total: ' + monedasTotales);
 
       if (!usuario || !clientSupabase) return;
 
