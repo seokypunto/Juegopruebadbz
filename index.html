@@ -29,41 +29,43 @@
     #monedas {
       font-size: 3.5rem;
       font-weight: bold;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       color: #ffd700;
     }
-    /* Estilo del asset minero */
+    
+    /* Botón transparente sin recuadro */
     .btn-mina {
-      background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
-      color: white;
-      border: 3px solid #444;
-      border-radius: 20px;
-      width: 200px;
-      height: 180px;
+      background: none;
+      border: none;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       cursor: pointer;
-      box-shadow: 0 10px 0 #111;
       transition: transform 0.1s;
-      position: relative;
     }
     .btn-mina:active {
-      transform: translateY(4px);
-      box-shadow: 0 6px 0 #111;
+      transform: scale(0.95);
     }
+
+    /* Vegeta en grande y nítido */
     .icono-mina-img {
-      width: 90px;
-      height: 90px;
+      width: 180px;
+      height: 180px;
       object-fit: contain;
       margin-bottom: 10px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
+
     .texto-estado {
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: bold;
       color: #00ffcc;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
+
     /* Barra de progreso */
     .barra-contenedor {
       width: 80%;
@@ -94,9 +96,9 @@
   <div class="titulo">Balance Total</div>
   <div id="monedas">0</div>
 
-  <!-- Asset de Vegeta en pantalla con su ruta directa oficial -->
+  <!-- Vegeta sin recuadro y a gran tamaño -->
   <button class="btn-mina" id="btnMina" onclick="recolectar()">
-    <img src="https://github.com/seokypunto/Juegopruebadbz/blob/main/vegeta.png?raw=true" class="icono-mina-img" alt="Vegeta">
+    <img src="assets/img/vegeta.png" class="icono-mina-img" alt="Vegeta SSJ">
     <div class="texto-estado" id="estadoTexto">Minando...</div>
   </button>
 
@@ -136,7 +138,6 @@
     var progresoActual = 0;
     var limiteMinado = 1000;
 
-    // Bucle automático de minado (suma 1 al progreso cada 1 segundo)
     setInterval(function() {
       if (progresoActual < limiteMinado) {
         progresoActual++;
@@ -144,7 +145,7 @@
 
         if (progresoActual === limiteMinado) {
           document.getElementById('estadoTexto').innerText = "¡RECLAMAR!";
-          document.getElementById('btnMina').style.borderColor = "#ffd700";
+          document.getElementById('estadoTexto').style.color = "#ffd700";
         }
       }
     }, 1000);
@@ -154,7 +155,6 @@
       document.getElementById('textoProgreso').innerText = 'Progreso: ' + progresoActual + ' / ' + limiteMinado;
     }
 
-    // Acción al hacer clic en el asset
     function recolectar() {
       if (progresoActual < limiteMinado) {
         logger('Aún no está lleno, espera a que termine de minar.');
@@ -166,7 +166,7 @@
 
       progresoActual = 0;
       document.getElementById('estadoTexto').innerText = "Minando...";
-      document.getElementById('btnMina').style.borderColor = "#444";
+      document.getElementById('estadoTexto').style.color = "#00ffcc";
       actualizarInterfaz();
 
       logger('¡Recogido! Total: ' + monedasTotales);
