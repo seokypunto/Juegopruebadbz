@@ -32,7 +32,7 @@
       margin-bottom: 30px;
       color: #ffd700;
     }
-    /* Estilo del asset minero (Cofre / Nodo) */
+    /* Estilo del asset minero */
     .btn-mina {
       background: linear-gradient(135deg, #2a2a2a, #1f1f1f);
       color: white;
@@ -53,8 +53,10 @@
       transform: translateY(4px);
       box-shadow: 0 6px 0 #111;
     }
-    .icono-mina {
-      font-size: 3.5rem;
+    .icono-mina-img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
       margin-bottom: 10px;
     }
     .texto-estado {
@@ -84,7 +86,6 @@
       color: #aaa;
       margin-top: 8px;
     }
-    /* Consola oculta */
     #log { display: none; }
   </style>
 </head>
@@ -93,9 +94,9 @@
   <div class="titulo">Balance Total</div>
   <div id="monedas">0</div>
 
-  <!-- Asset interactivo en pantalla -->
+  <!-- Asset de Vegeta en pantalla -->
   <button class="btn-mina" id="btnMina" onclick="recolectar()">
-    <div class="icono-mina">💎</div>
+    <img src="vegeta.png" class="icono-mina-img" alt="Vegeta">
     <div class="texto-estado" id="estadoTexto">Minando...</div>
   </button>
 
@@ -133,7 +134,7 @@
 
     var monedasTotales = 0;
     var progresoActual = 0;
-    var limiteMinado = 1000; // Límite cambiado a 1000
+    var limiteMinado = 1000;
 
     // Bucle automático de minado (suma 1 al progreso cada 1 segundo)
     setInterval(function() {
@@ -155,17 +156,14 @@
 
     // Acción al hacer clic en el asset
     function recolectar() {
-      // Solo permite recoger si la barra se ha llenado
       if (progresoActual < limiteMinado) {
         logger('Aún no está lleno, espera a que termine de minar.');
         return;
       }
 
-      // Sumamos las 1000 monedas al total
       monedasTotales += limiteMinado;
       document.getElementById('monedas').innerText = monedasTotales;
 
-      // Reseteamos la barra
       progresoActual = 0;
       document.getElementById('estadoTexto').innerText = "Minando...";
       document.getElementById('btnMina').style.borderColor = "#444";
@@ -175,7 +173,6 @@
 
       if (!usuario || !clientSupabase) return;
 
-      // Guardar en Supabase
       clientSupabase
         .from('jugadores')
         .upsert({ 
