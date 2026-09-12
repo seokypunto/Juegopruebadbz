@@ -48,7 +48,7 @@
       transform: scale(0.95);
     }
 
-    /* Vegeta Blue a lo grande (280px) y nítido */
+    /* Personajes a lo grande (280px) y nítidos */
     .icono-mina-img {
       width: 280px;
       height: 280px;
@@ -66,7 +66,7 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* Barra de progreso */
+    /* Barra de progreso de minado */
     .barra-contenedor {
       width: 80%;
       max-width: 280px;
@@ -88,25 +88,81 @@
       color: #aaa;
       margin-top: 10px;
     }
+
+    /* Estilos de la pantalla de la Cápsula */
+    .capsula-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 90%;
+      max-width: 320px;
+    }
+    .contador-capsula {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #00ffcc;
+      margin: 15px 0;
+      font-family: monospace;
+    }
+    .btn-accion {
+      background: linear-gradient(135deg, #00b4db, #0083b0);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: transform 0.1s;
+    }
+    .btn-accion:active {
+      transform: scale(0.97);
+    }
+    .btn-pago {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #121212;
+    }
+
+    .oculto { display: none !important; }
     #log { display: none; }
   </style>
 </head>
 <body>
 
-  <div class="titulo">Balance Total</div>
-  <div id="monedas">0</div>
+  <!-- ================= PANTALLA 1: LA CÁPSULA (INCUBAZIÓN) ================= -->
+  <div id="pantallaCapsula" class="capsula-container">
+    <div class="titulo">Cápsula de Nacimiento</div>
+    
+    <!-- Aquí puedes cambiar la imagen de la cápsula o de Vegeta de bebé cuando la subas a assets/img/ -->
+    <img src="https://raw.githubusercontent.com/seokypunto/Juegopruebadbz/main/assets/img/vegeta-blue.png?raw=true" class="icono-mina-img" alt="Cápsula Vegeta">
+    
+    <div style="font-size: 0.9rem; color: #bbb;">Tiempo restante para eclosionar:</div>
+    <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
-  <!-- Vegeta Blue con enlace directo y oficial -->
-  <button class="btn-mina" id="btnMina" onclick="recolectar()">
-    <img src="https://raw.githubusercontent.com/seokypunto/Juegopruebadbz/main/assets/img/vegeta-blue.png?raw=true" class="icono-mina-img" alt="Vegeta Blue">
-    <div class="texto-estado" id="estadoTexto">Minando...</div>
-  </button>
-
-  <!-- Barra de llenado -->
-  <div class="barra-contenedor">
-    <div id="barraProgreso"></div>
+    <button class="btn-accion" onclick="invitarAmigo()">👥 Invitar Amigo (-1 Hora)</button>
+    <button class="btn-accion btn-pago" onclick="acelerarPago()">⚡ Acelerar con Inversión</button>
   </div>
-  <div id="textoProgreso">Progreso: 0 / 1000</div>
+
+
+  <!-- ================= PANTALLA 2: EL MINERO (JUEGO PRINCIPAL) ================= -->
+  <div id="pantallaMinero" class="oculto" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+    <div class="titulo">Balance Total</div>
+    <div id="monedas">0</div>
+
+    <button class="btn-mina" id="btnMina" onclick="recolectar()">
+      <img src="https://raw.githubusercontent.com/seokypunto/Juegopruebadbz/main/assets/img/vegeta-blue.png?raw=true" class="icono-mina-img" alt="Vegeta Blue">
+      <div class="texto-estado" id="estadoTexto">Minando...</div>
+    </button>
+
+    <div class="barra-contenedor">
+      <div id="barraProgreso"></div>
+    </div>
+    <div id="textoProgreso">Progreso: 0 / 1000</div>
+  </div>
 
   <div id="log">=== CONSOLA ===</div>
 
@@ -134,23 +190,77 @@
       }
     } catch(e) {}
 
+    // --- LÓGICA DE LA CÁPSULA (48 Horas en segundos = 172800) ---
+    // Para pruebas puedes cambiar esto por un número pequeño (ej: 10 segundos)
+    var tiempoRestanteSegundos = 48 * 3600; 
+
+    function actualizarRelojCapsula() {
+      if (tiempoRestanteSegundos <= 0) {
+        eclosionarCapsula();
+        return;
+      }
+      
+      var horas = Math.floor(tiempoRestanteSegundos / 3600);
+      var minutos = Math.floor((tiempoRestanteSegundos % 3600) / 60);
+      var segundos = tiempoRestanteSegundos % 60;
+
+      document.getElementById('relojCapsula').innerText = 
+        (horas < 10 ? "0" : "") + horas + ":" + 
+        (minutos < 10 ? "0" : "") + minutos + ":" + 
+        (segundos < 10 ? "0" : "") + segundos;
+      
+      tiempoRestanteSegundos--;
+    }
+
+    // Temporizador de la cápsula (corre cada segundo)
+    var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
+
+    function invitarAmigo() {
+      // Resta 1 hora (3600 segundos). Si baja de 0, eclosiona directamente.
+      tiempoRestanteSegundos -= 3600;
+      if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
+      actualizarRelojCapsula();
+      logger('¡Amigo invitado! -1 hora en la cápsula.');
+    }
+
+    function acelerarPago() {
+      // Simula pasarela de pago o reducción drástica por inversión
+      tiempoRestanteSegundos -= 12 * 3600; // Resta 12 horas de golpe por ejemplo
+      if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
+      actualizarRelojCapsula();
+      logger('¡Inversión aplicada! Aceleración de cápsula.');
+    }
+
+    function eclosionarCapsula() {
+      clearInterval(timerCapsula);
+      // Ocultamos la cápsula y mostramos la pantalla de minado de Vegeta
+      document.getElementById('pantallaCapsula').classList.add('oculto');
+      document.getElementById('pantallaMinero').classList.remove('oculto');
+      logger('¡La cápsula ha eclosionado! Comienza el minado.');
+    }
+
+
+    // --- LÓGICA DEL MINERO (Pantalla 2) ---
     var monedasTotales = 0;
     var progresoActual = 0;
     var limiteMinado = 1000;
 
     setInterval(function() {
-      if (progresoActual < limiteMinado) {
-        progresoActual++;
-        actualizarInterfaz();
+      // El minero solo avanza si ya pasó la cápsula
+      if (!document.getElementById('pantallaMinero').classList.contains('oculto')) {
+        if (progresoActual < limiteMinado) {
+          progresoActual++;
+          actualizarInterfazMinado();
 
-        if (progresoActual === limiteMinado) {
-          document.getElementById('estadoTexto').innerText = "¡RECLAMAR!";
-          document.getElementById('estadoTexto').style.color = "#ffd700";
+          if (progresoActual === limiteMinado) {
+            document.getElementById('estadoTexto').innerText = "¡RECLAMAR!";
+            document.getElementById('estadoTexto').style.color = "#ffd700";
+          }
         }
       }
     }, 1000);
 
-    function actualizarInterfaz() {
+    function actualizarInterfazMinado() {
       document.getElementById('barraProgreso').style.width = (progresoActual / limiteMinado) * 100 + '%';
       document.getElementById('textoProgreso').innerText = 'Progreso: ' + progresoActual + ' / ' + limiteMinado;
     }
@@ -167,7 +277,7 @@
       progresoActual = 0;
       document.getElementById('estadoTexto').innerText = "Minando...";
       document.getElementById('estadoTexto').style.color = "#00ffcc";
-      actualizarInterfaz();
+      actualizarInterfazMinado();
 
       logger('¡Recogido! Total: ' + monedasTotales);
 
