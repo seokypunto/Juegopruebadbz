@@ -123,6 +123,50 @@
       color: #121212;
     }
 
+    /* Estilos para el menú emergente de opciones de referido */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-contenido {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 16px;
+      width: 85%;
+      max-width: 280px;
+      text-align: center;
+      border: 1px solid #444;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+    .modal-contenido p {
+      margin-top: 0;
+      font-size: 1rem;
+      color: #ddd;
+    }
+    .btn-modal {
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      padding: 10px;
+      border-radius: 8px;
+      width: 100%;
+      margin-top: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .btn-modal:active { background: #444; }
+    .btn-cerrar {
+      background: #b71c1c;
+      border: none;
+      margin-top: 15px;
+    }
+
     .oculto { display: none !important; }
     #log { display: none; }
   </style>
@@ -138,7 +182,7 @@
     <div style="font-size: 0.9rem; color: #bbb;">Tiempo restante para eclosionar:</div>
     <div id="relojCapsula" class="contador-capsula">48:00:00</div>
 
-    <button class="btn-accion" onclick="copiarEnlaceReferido()">👥 Invitar Amigo (-1 Hora)</button>
+    <button class="btn-accion" onclick="abrirOpcionesReferido()">👥 Invitar Amigo (-1 Hora)</button>
     <button class="btn-accion btn-pago" onclick="acelerarPago()">⚡ Acelerar con Inversión</button>
   </div>
 
@@ -157,6 +201,16 @@
       <div id="barraProgreso"></div>
     </div>
     <div id="textoProgreso">Progreso: 0 / 1000</div>
+  </div>
+
+  <!-- MODAL DE OPCIONES DE INVITACIÓN -->
+  <div id="modalReferido" class="modal-overlay oculto">
+    <div class="modal-contenido">
+      <p>¿Cómo quieres compartir tu enlace?</p>
+      <button class="btn-modal" onclick="copiarEnlaceDirecto()">📋 Copiar enlace</button>
+      <button class="btn-modal" onclick="compartirTelegramDirecto()">✈️ Compartir en Telegram</button>
+      <button class="btn-modal btn-cerrar" onclick="cerrarModalReferido()">Cancelar</button>
+    </div>
   </div>
 
   <div id="log">=== CONSOLA ===</div>
@@ -208,28 +262,49 @@
 
     var timerCapsula = setInterval(actualizarRelojCapsula, 1000);
 
-    // --- SISTEMA DE REFERIDOS (MODIFICADO PARA TELEGRAM) ---
-    function copiarEnlaceReferido() {
+    // --- SISTEMA DE REFERIDOS CORREGIDO ---
+    function abrirOpcionesReferido() {
       if (!usuario) {
         logger('No se pudo obtener el usuario de Telegram.');
         alert("Error: Debes abrir este juego desde Telegram para generar tu enlace.");
         return;
       }
+      document.getElementById('modalReferido').classList.remove('oculto');
+    }
 
-      var enlaceRef = "https://t.me/seoky_tanbot?start=ref_" + usuario.id;
+    function cerrarModalReferido() {
+      document.getElementById('modalReferido').classList.add('oculto');
+    }
 
-      // Si está en Telegram, abre directamente la ventana nativa para compartir el enlace
+    function obtenerEnlaceRef() {
+      if (!usuario) return "";
+      // Enlace corregido utilizando el bot correcto vinculado a tu ecosistema
+      return "https://t.me/seokypunto_bot?start=ref_" + usuario.id;
+    }
+
+    function copiarEnlaceDirecto() {
+      var enlaceRef = obtenerEnlaceRef();
+      if (!enlaceRef) return;
+
+      navigator.clipboard.writeText(enlaceRef).then(function() {
+        alert("¡Enlace copiado al portapapeles! Ya puedes pegarlo donde quieras.");
+        cerrarModalReferido();
+      }).catch(function(err) {
+        alert("No se pudo copiar el enlace automáticamente.");
+      });
+    }
+
+    function compartirTelegramDirecto() {
+      var enlaceRef = obtenerEnlaceRef();
+      if (!enlaceRef) return;
+
       if (tg && tg.openTelegramLink) {
         var textoMensaje = "¡Únete a mi cápsula en Criptomaniakos Miner y ayúdame a eclosionar!";
         var enlaceShare = "https://t.me/share/url?url=" + encodeURIComponent(enlaceRef) + "&text=" + encodeURIComponent(textoMensaje);
         tg.openTelegramLink(enlaceShare);
+        cerrarModalReferido();
       } else {
-        // Método alternativo si se abre fuera de Telegram
-        navigator.clipboard.writeText(enlaceRef).then(function() {
-          alert("¡Enlace copiado al portapapeles!");
-        }).catch(function(err) {
-          alert("No se pudo copiar el enlace.");
-        });
+        alert("La función de compartir en Telegram solo está disponible dentro de la app.");
       }
     }
 
