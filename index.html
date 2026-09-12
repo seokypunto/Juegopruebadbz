@@ -449,6 +449,7 @@
     var nivelActual = 1;
     var expActual = 0;
     var expNecesaria = 5000;
+    var ultimaVezGuardado = Date.now();
 
     async function verificarYRegistrarUsuario() {
       if (!usuario || !clientSupabase) {
@@ -479,6 +480,17 @@
           expActual = res.data.exp || 0;
           progresoActual = res.data.progreso_minado || 0;
 
+          // CÁLCULO DE PROGRESO OFFLINE (Basado en el tiempo transcurrido desde que cerraste la app)
+          var ultimaActualizacionDb = parseInt(res.data.ultima_actualizacion || ahora);
+          var segundosFuera = Math.floor((ahora - ultimaActualizacionDb) / 1000);
+
+          if (segundosFuera > 0 && progresoActual < limiteMinado && capsulaAbierta) {
+            progresoActual += segundosFuera;
+            if (progresoActual >= limiteMinado) {
+              progresoActual = limiteMinado;
+            }
+          }
+
           document.getElementById('monedas').innerText = monedasTotales;
           actualizarInterfazNivel();
           actualizarInterfazMinado();
@@ -495,6 +507,9 @@
           } else {
             iniciarContadorLocal(segundosRestantes);
           }
+
+          // Guardar inmediatamente el progreso calculado al abrir
+          actualizarSupabaseProgreso();
         } else {
           timestampFin = ahora + (48 * 3600 * 1000);
           monedasTotales = 0;
@@ -515,7 +530,8 @@
             nivel: 1,
             exp: 0,
             progreso_minado: 0,
-            capsula_fin: timestampFin
+            capsula_fin: timestampFin,
+            ultima_actualizacion: ahora
           }, { onConflict: 'telegram_id' });
 
           if (referrerId) {
@@ -573,7 +589,8 @@
           nivel: nivelActual,
           exp: expActual,
           progreso_minado: progresoActual,
-          capsula_fin: timestampFin
+          capsula_fin: timestampFin,
+          ultima_actualizacion: Date.now()
         }, { onConflict: 'telegram_id' });
       } catch (e) {}
     }
@@ -761,8 +778,7 @@
       }
     }
 
-    // Intervalo de minado con guardado periódico en Supabase cada 10 segundos
-    var contadorGuardado = 0;
+    // Bucle de minado en tiempo real (cuando la app está abierta) y guardado automático cada 5 segundos
     setInterval(function() {
       var navActivo = document.getElementById('navJuego').classList.contains('activo');
       if (capsulaAbierta && navActivo) {
@@ -775,16 +791,27 @@
             document.getElementById('estadoTexto').style.color = "#ffd700";
             actualizarSupabaseProgreso();
           }
-
-          // Guardar progreso automáticamente en Supabase cada 10 segundos para no perder nada si cierran la Mini App
-          contadorGuardado++;
-          if (contadorGuardado >= 10) {
-            contadorGuardado = 0;
-            actualizarSupabaseProgreso();
-          }
         }
       }
     }, 1000);
+
+    // Guardado automático cada 5 segundos en segundo plano si la app sigue abierta
+    setInterval(function() {
+      if (capsulaAbierta) {
+        actualizarSupabaseProgreso();
+      }
+    }, 5000);
+
+    // Eventos para guardar inmediatamente si el usuario minimiza, oculta o cierra la pestaña/app
+    window.addEventListener('beforeunload', function() {
+      actualizarSupabaseProgreso();
+    });
+
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') {
+        actualizarSupabaseProgreso();
+      }
+    });
 
     function actualizarInterfazMinado() {
       document.getElementById('barraProgreso').style.width = (progresoActual / limiteMinado) * 100 + '%';
