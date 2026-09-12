@@ -48,18 +48,18 @@
       transform: scale(0.95);
     }
 
-    /* Vegeta en grande y nítido desde la carpeta ordenada */
+    /* Vegeta a lo grande (280px) y nítido */
     .icono-mina-img {
-      width: 180px;
-      height: 180px;
+      width: 280px;
+      height: 280px;
       object-fit: contain;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
 
     .texto-estado {
-      font-size: 1rem;
+      font-size: 1.2rem;
       font-weight: bold;
       color: #00ffcc;
       text-transform: uppercase;
@@ -69,11 +69,11 @@
     /* Barra de progreso */
     .barra-contenedor {
       width: 80%;
-      max-width: 250px;
+      max-width: 280px;
       background: #222;
       border-radius: 10px;
-      height: 14px;
-      margin-top: 25px;
+      height: 16px;
+      margin-top: 30px;
       overflow: hidden;
       border: 1px solid #444;
     }
@@ -84,9 +84,9 @@
       transition: width 0.3s ease;
     }
     #textoProgreso {
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       color: #aaa;
-      margin-top: 8px;
+      margin-top: 10px;
     }
     #log { display: none; }
   </style>
@@ -96,7 +96,7 @@
   <div class="titulo">Balance Total</div>
   <div id="monedas">0</div>
 
-  <!-- Vegeta cargando correctamente desde assets/img/vegeta.png -->
+  <!-- Vegeta cargando desde assets/img/vegeta.png a gran tamaño -->
   <button class="btn-mina" id="btnMina" onclick="recolectar()">
     <img src="assets/img/vegeta.png" class="icono-mina-img" alt="Vegeta SSJ">
     <div class="texto-estado" id="estadoTexto">Minando...</div>
